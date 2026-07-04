@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family World Championship · Live Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy-deepest:#050f20; --navy-deep:#081a33; --navy:#0a1f3c; --navy-2:#143257; --navy-3:#1b3f6b;
+  --gold:#c19a3e; --gold-light:#ecd185; --gold-line:#9c7c30; --gold-dim:rgba(193,154,62,.28);
+  --cream:#f3ead6; --ink:#dce6f4; --muted:#8fa3bf; --faint:#5c7191;
+  --win:#3fa06a; --win-bright:#54c186; --loss:#c0504d; --loss-bright:#e0716d;
+  --card:rgba(255,255,255,.028); --card-edge:rgba(202,162,74,.22);
+  --serif:'Cinzel','Times New Roman',Georgia,serif;
+  --sans:'Barlow','Helvetica Neue',Arial,sans-serif;
+  --cond:'Barlow Condensed','Arial Narrow',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{background:var(--navy-deepest);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;
+  background-image:radial-gradient(1200px 600px at 50% -100px,rgba(27,63,107,.55),transparent 70%),
+  radial-gradient(900px 500px at 85% 20%,rgba(193,154,62,.05),transparent 60%);background-attachment:fixed}
+::selection{background:var(--gold);color:var(--navy-deep)}
+a{color:var(--gold-light);text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:rgba(5,15,32,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--gold-dim)}
+nav .wrap{display:flex;align-items:center;gap:18px;height:60px}
+nav .mark{width:34px;height:39px;flex:0 0 auto}
+nav .brand{font-family:var(--serif);font-weight:600;letter-spacing:3px;font-size:14px;color:var(--gold-light);white-space:nowrap}
+nav .links{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-left:auto}
+nav .links::-webkit-scrollbar{display:none}
+nav .links a{font-family:var(--cond);font-size:14px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);padding:8px 11px;border-radius:4px;white-space:nowrap;transition:color .15s}
+nav .links a:hover{color:var(--gold-light)}
+nav .links a.on{color:var(--gold-light);box-shadow:inset 0 -2px 0 var(--gold)}
+
+/* ---------- live badge ---------- */
+#liveBadge{display:inline-flex;align-items:center;gap:7px;font-family:var(--cond);font-size:12.5px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--gold-light);border:1px solid var(--gold-dim);border-radius:20px;padding:4px 13px;background:rgba(193,154,62,.07)}
+#liveBadge .dot{width:8px;height:8px;border-radius:50%;background:var(--win-bright);box-shadow:0 0 0 0 rgba(84,193,134,.6);animation:pulse 2s infinite}
+#liveBadge.snapshot .dot{background:var(--gold);box-shadow:none;animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(84,193,134,.55)}70%{box-shadow:0 0 0 8px rgba(84,193,134,0)}100%{box-shadow:0 0 0 0 rgba(84,193,134,0)}}
+
+/* ---------- hero ---------- */
+header{padding:52px 0 34px;text-align:center;position:relative}
+header .crest{width:150px;margin:0 auto 6px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.55))}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(26px,4.6vw,44px);letter-spacing:7px;color:transparent;background:linear-gradient(180deg,var(--gold-light),var(--gold));-webkit-background-clip:text;background-clip:text;margin-top:14px}
+header .est{font-family:var(--serif);font-size:13px;letter-spacing:5px;color:var(--gold);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:14px}
+header .est::before,header .est::after{content:"";width:56px;height:1px;background:linear-gradient(90deg,transparent,var(--gold));display:block}
+header .est::after{background:linear-gradient(90deg,var(--gold),transparent)}
+header .asof{margin-top:16px;color:var(--muted);font-size:14px;letter-spacing:.4px}
+header .badgerow{margin-top:14px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center}
+.champStrip{margin:30px auto 0;max-width:620px;border:1px solid var(--card-edge);border-radius:10px;padding:16px 24px;background:linear-gradient(180deg,rgba(20,50,87,.55),rgba(10,31,60,.55));display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.champStrip .crown{font-size:26px}
+.champStrip .lab{font-family:var(--cond);font-size:13px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
+.champStrip .who{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--gold-light);letter-spacing:1px}
+.champStrip .blurb{flex-basis:100%;text-align:center;color:var(--muted);font-size:13.5px}
+.chips{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:26px}
+.chip{border:1px solid var(--card-edge);background:var(--card);border-radius:8px;padding:10px 20px;min-width:118px}
+.chip b{display:block;font-family:var(--cond);font-size:26px;font-weight:700;color:var(--gold-light);letter-spacing:1px}
+.chip span{font-family:var(--cond);font-size:12px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- sections ---------- */
+section{padding:38px 0 10px}
+.sechead{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--gold-dim);padding-bottom:10px;margin-bottom:20px;flex-wrap:wrap}
+.sechead h2{font-family:var(--serif);font-weight:600;font-size:21px;letter-spacing:3px;color:var(--gold-light);text-transform:uppercase}
+.sechead p{color:var(--muted);font-size:13.5px}
+.panel{background:var(--card);border:1px solid var(--card-edge);border-radius:10px;overflow:hidden}
+
+/* ---------- storylines ---------- */
+.storyGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.story{background:var(--card);border:1px solid var(--card-edge);border-left:3px solid var(--gold);border-radius:8px;padding:12px 15px;font-size:14px;color:var(--ink)}
+
+/* ---------- title race ---------- */
+.raceRow{display:flex;align-items:center;gap:12px;padding:9px 16px}
+.raceRow .nm{width:150px;flex:0 0 auto;font-weight:600;font-size:14.5px}
+.raceRow .barTrack{flex:1;height:26px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden;position:relative}
+.raceRow .bar{height:100%;background:linear-gradient(90deg,var(--navy-3),var(--gold) 92%,var(--gold-light));border-radius:4px;min-width:2%;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-family:var(--cond);font-weight:700;font-size:14px;color:var(--navy-deep);transition:width 1s ease}
+.raceRow .gap{width:96px;flex:0 0 auto;text-align:right;font-family:var(--cond);font-size:13px;color:var(--muted);letter-spacing:.5px}
+.raceRow.lead .bar{background:linear-gradient(90deg,var(--gold),var(--gold-light))}
+.raceRow.ineligible .bar{background:linear-gradient(90deg,#31425c,#4a5e7d);color:var(--ink)}
+
+/* ---------- tables ---------- */
+.tblScroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{font-family:var(--cond);font-size:12.5px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold);text-align:left;padding:11px 12px;border-bottom:1px solid var(--gold-dim);white-space:nowrap;background:rgba(10,31,60,.6)}
+td{padding:10px 12px;border-bottom:1px solid rgba(143,163,191,.09);white-space:nowrap;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .12s}
+tbody tr:hover{background:rgba(193,154,62,.05)}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--gold-light)}
+th .arr{opacity:.6;font-size:10px}
+td.num,th.num{text-align:right}
+.rk{font-family:var(--cond);font-weight:700;font-size:16px;color:var(--muted);width:34px}
+.rk.m1{color:var(--gold-light)} .rk.m2{color:#cfd8e6} .rk.m3{color:#d29a63}
+.pname{font-weight:600;font-size:14.5px;color:var(--cream)}
+.rating{font-family:var(--cond);font-weight:700;font-size:17px;color:var(--gold-light);letter-spacing:.5px}
+.pill{display:inline-block;font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:1.2px;border-radius:4px;padding:2px 8px}
+.pill.w{background:rgba(63,160,106,.16);color:var(--win-bright);border:1px solid rgba(63,160,106,.35)}
+.pill.l{background:rgba(192,80,77,.14);color:var(--loss-bright);border:1px solid rgba(192,80,77,.35)}
+.pill.n{background:rgba(143,163,191,.1);color:var(--muted);border:1px solid rgba(143,163,191,.25)}
+.tier{display:inline-block;font-family:var(--cond);font-size:11.5px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;border-radius:10px;padding:2px 10px}
+.tier.Elite{background:rgba(193,154,62,.16);color:var(--gold-light);border:1px solid var(--gold-dim)}
+.tier.Strong{background:rgba(84,193,134,.1);color:var(--win-bright);border:1px solid rgba(63,160,106,.3)}
+.tier.Mid{background:rgba(143,163,191,.1);color:var(--ink);border:1px solid rgba(143,163,191,.25)}
+.tier.Developing{background:rgba(192,80,77,.1);color:var(--loss-bright);border:1px solid rgba(192,80,77,.3)}
+.tier.Unranked,.tier.No{background:rgba(92,113,145,.12);color:var(--faint);border:1px solid rgba(92,113,145,.3)}
+.dots{display:inline-flex;gap:3px}
+.dot-w,.dot-l{width:9px;height:9px;border-radius:50%}
+.dot-w{background:var(--win-bright)} .dot-l{background:var(--loss)}
+.mv{font-family:var(--cond);font-weight:600}
+.mv.up{color:var(--win-bright)} .mv.dn{color:var(--loss-bright)} .mv.fl{color:var(--faint)}
+.statusTag{font-size:12.5px;color:var(--muted)}
+.statusTag.prov{color:#d0a952}
+tfoot td,.tblNote{font-size:12.5px;color:var(--faint);padding:10px 14px}
+
+/* ---------- form heat map ---------- */
+.formGrid{padding:14px 16px;display:grid;gap:7px}
+.formRow{display:flex;align-items:center;gap:12px}
+.formRow .nm{width:140px;flex:0 0 auto;font-size:13.5px;font-weight:600;color:var(--ink)}
+.formRow .cells{display:flex;gap:4px}
+.fc{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:12px;font-weight:700}
+.fc.W{background:rgba(63,160,106,.28);color:var(--win-bright);border:1px solid rgba(63,160,106,.4)}
+.fc.L{background:rgba(192,80,77,.2);color:var(--loss-bright);border:1px solid rgba(192,80,77,.35)}
+.fc.E{background:rgba(255,255,255,.02);border:1px dashed rgba(143,163,191,.15)}
+.legend{font-size:12.5px;color:var(--faint);padding:0 16px 14px}
+
+/* ---------- sport cards ---------- */
+.sportGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.scard{background:var(--card);border:1px solid var(--card-edge);border-radius:8px;padding:14px 16px;position:relative}
+.scard h4{font-family:var(--cond);font-size:15px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.scard .ldr{font-family:var(--serif);font-size:17px;color:var(--cream)}
+.scard .meta{font-size:12.5px;color:var(--muted);margin-top:4px}
+.scard.empty{opacity:.45}
+.scard.empty .ldr{font-family:var(--sans);font-size:13.5px;color:var(--faint);font-style:italic}
+.scard .gbadge{position:absolute;top:12px;right:14px;font-family:var(--cond);font-size:12px;color:var(--faint);letter-spacing:1px}
+
+/* ---------- sport ladder picker ---------- */
+.pickerRow{display:flex;align-items:center;gap:14px;margin:26px 0 12px;flex-wrap:wrap}
+.pickerRow label{font-family:var(--cond);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+select{background:var(--navy);color:var(--cream);border:1px solid var(--card-edge);border-radius:6px;padding:8px 14px;font-family:var(--sans);font-size:14px;outline:none}
+select:focus{border-color:var(--gold)}
+
+/* ---------- h2h ---------- */
+.h2hWrap{overflow-x:auto;padding-bottom:4px}
+.h2h{border-collapse:separate;border-spacing:3px;margin:6px auto}
+.h2h th{background:none;border:none;padding:6px 4px;font-size:11.5px;color:var(--muted);letter-spacing:.6px}
+.h2h th.rowh{text-align:right;padding-right:10px;color:var(--ink);font-size:12.5px}
+.h2h th.colh span{writing-mode:vertical-rl;transform:rotate(198deg);display:inline-block;max-height:96px;transform:rotate(180deg)}
+.h2h td{width:52px;height:38px;min-width:52px;text-align:center;border-radius:4px;border:none;font-family:var(--cond);font-size:13px;font-weight:600;padding:0}
+.h2h td.self{background:rgba(255,255,255,.03);color:var(--faint)}
+.h2h td.none{background:rgba(255,255,255,.015);color:transparent}
+.h2h td .sub{display:block;font-size:10px;font-weight:400;opacity:.75;margin-top:-2px}
+
+/* ---------- records ---------- */
+.recCols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:860px){.recCols{grid-template-columns:1fr}}
+.recList{padding:6px 0}
+.recItem{display:flex;gap:14px;padding:11px 18px;border-bottom:1px solid rgba(143,163,191,.08);align-items:baseline}
+.recItem:last-child{border-bottom:none}
+.recItem .n{font-family:var(--cond);font-weight:700;font-size:16px;color:var(--gold);width:22px;flex:0 0 auto}
+.recItem .txt b{color:var(--cream)}
+.recItem .txt{font-size:14px}
+.recItem .when{margin-left:auto;font-family:var(--cond);font-size:12.5px;color:var(--faint);flex:0 0 auto}
+.oddsTag{display:inline-block;font-family:var(--cond);font-weight:700;color:var(--loss-bright);background:rgba(192,80,77,.12);border:1px solid rgba(192,80,77,.3);border-radius:4px;padding:0 7px;font-size:12.5px;margin-left:6px}
+.awardGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:16px}
+.award{background:linear-gradient(180deg,rgba(20,50,87,.5),rgba(10,31,60,.4));border:1px solid var(--card-edge);border-radius:8px;padding:16px;text-align:center}
+.award .emoji{font-size:28px}
+.award h4{font-family:var(--serif);font-size:15px;letter-spacing:1px;color:var(--gold-light);margin:8px 0 4px}
+.award .who{font-weight:600;font-size:15px;color:var(--cream)}
+.award .for{font-size:12.5px;color:var(--muted);margin-top:4px}
+
+/* ---------- roll of honour ---------- */
+.honour{max-width:640px;margin:0 auto}
+.honour table td{white-space:normal}
+.honour .yr{font-family:var(--serif);font-weight:600;color:var(--gold-light);font-size:16px}
+.honour .nc{color:var(--faint);font-style:italic}
+.honourMeta{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+
+/* ---------- recent ---------- */
+.recentList{padding:4px 0}
+.recentItem{display:flex;align-items:center;gap:14px;padding:11px 18px;border-bottom:1px solid rgba(143,163,191,.08);flex-wrap:wrap}
+.recentItem:last-child{border-bottom:none}
+.recentItem .date{font-family:var(--cond);font-size:13px;color:var(--faint);width:52px;flex:0 0 auto}
+.recentItem .sport{font-family:var(--cond);font-size:13px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold);width:110px;flex:0 0 auto}
+.recentItem .res b{color:var(--cream)}
+.recentItem .res{font-size:14px}
+.recentItem .delta{margin-left:auto;font-family:var(--cond);font-weight:700;color:var(--win-bright);font-size:14px}
+
+/* ---------- wrap show ---------- */
+.showMast{background:linear-gradient(180deg,var(--navy-2),var(--navy));border-bottom:1px solid var(--gold-dim);padding:26px 26px 20px;text-align:center}
+.showMast h3{font-family:var(--serif);letter-spacing:8px;font-size:22px;color:var(--gold-light)}
+.showMast .sub{font-family:var(--cond);letter-spacing:2.5px;text-transform:uppercase;font-size:13px;color:var(--muted);margin-top:8px}
+.showMast .bios{font-size:13px;color:var(--muted);max-width:760px;margin:12px auto 0;line-height:1.55}
+.seg{padding:0 0 8px}
+.seg h4{font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold-light);background:linear-gradient(90deg,rgba(20,50,87,.9),rgba(20,50,87,.2));padding:9px 26px;border-left:3px solid var(--gold);margin:18px 0 6px}
+.line{display:flex;gap:14px;padding:8px 26px;align-items:flex-start}
+.line .tag{flex:0 0 74px;text-align:center;font-family:var(--cond);font-size:12.5px;font-weight:700;letter-spacing:1.5px;border-radius:4px;padding:3px 0;margin-top:2px}
+.line.macca .tag{background:var(--navy-3);color:var(--ink);border:1px solid rgba(143,163,191,.3)}
+.line.robbo .tag{background:rgba(193,154,62,.16);color:var(--gold-light);border:1px solid var(--gold-dim)}
+.line p{font-size:14.5px;line-height:1.6;color:var(--ink)}
+
+/* ---------- footer + refresh ---------- */
+footer{margin-top:56px;border-top:1px solid var(--gold-dim);padding:30px 0 44px;text-align:center;color:var(--faint);font-size:13px}
+footer .formula{color:var(--muted);margin-bottom:10px}
+.updBtn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--cond);font-size:13px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--gold-light);border:1px solid var(--gold-dim);border-radius:20px;padding:6px 16px;background:rgba(193,154,62,.07);transition:background .15s}
+.updBtn:hover{background:rgba(193,154,62,.16)}
+#dropOverlay{position:fixed;inset:0;background:rgba(5,15,32,.9);z-index:100;display:none;align-items:center;justify-content:center;border:3px dashed var(--gold);}
+#dropOverlay.on{display:flex}
+#dropOverlay .msg{font-family:var(--serif);font-size:22px;letter-spacing:2px;color:var(--gold-light)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy-2);border:1px solid var(--gold-dim);color:var(--cream);padding:10px 22px;border-radius:8px;font-size:14px;z-index:110;display:none}
+
+@media(max-width:640px){
+  nav .brand{display:none}
+  .raceRow .nm{width:104px;font-size:13px}
+  .raceRow .gap{width:70px}
+  .formRow .nm{width:104px;font-size:12.5px}
+  .champStrip .who{font-size:21px}
+  header{padding-top:36px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="mark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1140" width="100%">
+<defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&amp;display=swap');</style>
+<linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecd185"/><stop offset="1" stop-color="#c19a3e"/></linearGradient>
+<linearGradient id="navy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#143257"/><stop offset="1" stop-color="#0a1f3c"/></linearGradient>
+</defs>
+
+<!-- CROWN -->
+<g fill="url(#gold)" stroke="#9c7c30" stroke-width="2" stroke-linejoin="round">
+<path d="M404,262 L596,262 L590,234 L410,234 Z"/>
+<path d="M410,234 L420,176 L432,210 Z"/>
+<path d="M432,210 L455,150 L478,206 Z"/>
+<path d="M478,206 L500,128 L522,206 Z"/>
+<path d="M522,206 L545,150 L568,210 Z"/>
+<path d="M568,210 L580,176 L590,234 Z"/>
+</g>
+<g fill="url(#gold)" stroke="#9c7c30" stroke-width="1.5">
+<circle cx="420" cy="172" r="7"/><circle cx="455" cy="146" r="7"/><circle cx="545" cy="146" r="7"/><circle cx="580" cy="172" r="7"/><circle cx="500" cy="118" r="8"/>
+</g>
+<rect x="497" y="92" width="6" height="22" fill="url(#gold)"/><rect x="491" y="99" width="18" height="6" fill="url(#gold)"/>
+<line x1="412" y1="250" x2="588" y2="250" stroke="#9c7c30" stroke-width="1.4" opacity="0.45"/>
+<circle cx="455" cy="250" r="4" fill="#0e2848"/><circle cx="500" cy="250" r="4" fill="#0e2848"/><circle cx="545" cy="250" r="4" fill="#0e2848"/>
+
+<!-- SHIELD -->
+<path d="M300,256 L700,256 L700,556 C700,712 622,820 500,880 C378,820 300,712 300,556 Z" fill="url(#gold)" stroke="#9c7c30" stroke-width="2"/>
+<path d="M314,270 L686,270 L686,554 C686,700 616,800 500,856 C384,800 314,700 314,554 Z" fill="url(#navy)"/>
+<path d="M328,284 L672,284 L672,552 C672,690 610,782 500,834 C390,782 328,690 328,552 Z" fill="none" stroke="#caa24a" stroke-width="1.4" opacity="0.7"/>
+
+<!-- TROPHY (clean, centred) -->
+<g>
+<ellipse cx="500" cy="402" rx="72" ry="12" fill="url(#gold)"/>
+<path d="M430,404 C434,474 468,516 500,524 C532,516 566,474 570,404 Z" fill="url(#gold)"/>
+<path d="M431,412 C398,410 392,450 420,466" fill="none" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+<path d="M569,412 C602,410 608,450 580,466" fill="none" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+<rect x="491" y="524" width="18" height="26" fill="url(#gold)"/>
+<path d="M468,550 L532,550 L522,570 L478,570 Z" fill="url(#gold)"/>
+<rect x="456" y="570" width="88" height="12" rx="3" fill="url(#gold)"/>
+</g>
+
+<!-- EST. 2019 -->
+<line x1="430" y1="648" x2="468" y2="648" stroke="url(#gold)" stroke-width="1.4"/>
+<line x1="532" y1="648" x2="570" y2="648" stroke="url(#gold)" stroke-width="1.4"/>
+<text x="500" y="656" text-anchor="middle" font-family="'Cinzel','Times New Roman',Georgia,serif" font-size="27" letter-spacing="5" fill="url(#gold)" font-weight="600">EST. 2019</text>
+
+<!-- WORDMARK -->
+<g stroke="url(#gold)" stroke-width="1.6"><line x1="250" y1="958" x2="430" y2="958"/><line x1="570" y1="958" x2="750" y2="958"/></g>
+<path d="M500,951 l7,7 -7,7 -7,-7 Z" fill="url(#gold)"/>
+<text x="500" y="1018" text-anchor="middle" font-family="'Cinzel','Times New Roman',Georgia,serif" font-size="43" letter-spacing="5" fill="url(#gold)" font-weight="600">FAMILY WORLD CHAMPIONSHIP</text>
+</svg></div>
+    <span class="brand">FWC &middot; LIVE</span>
+    <div class="links" id="navLinks">
+      <a href="#race">Title Race</a><a href="#ladder">Ladder</a><a href="#form">Form</a><a href="#sports">Sports</a><a href="#h2h">Head to Head</a><a href="#records">Records</a><a href="#honour">Honour</a><a href="#recent">Results</a><a href="#wrap">Monday Wrap</a>
+    </div>
+  </div>
+</nav>
+
+<header class="wrap">
+  <div class="crest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1140" width="100%">
+<defs>
+<style>@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&amp;display=swap');</style>
+<linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecd185"/><stop offset="1" stop-color="#c19a3e"/></linearGradient>
+<linearGradient id="navy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#143257"/><stop offset="1" stop-color="#0a1f3c"/></linearGradient>
+</defs>
+
+<!-- CROWN -->
+<g fill="url(#gold)" stroke="#9c7c30" stroke-width="2" stroke-linejoin="round">
+<path d="M404,262 L596,262 L590,234 L410,234 Z"/>
+<path d="M410,234 L420,176 L432,210 Z"/>
+<path d="M432,210 L455,150 L478,206 Z"/>
+<path d="M478,206 L500,128 L522,206 Z"/>
+<path d="M522,206 L545,150 L568,210 Z"/>
+<path d="M568,210 L580,176 L590,234 Z"/>
+</g>
+<g fill="url(#gold)" stroke="#9c7c30" stroke-width="1.5">
+<circle cx="420" cy="172" r="7"/><circle cx="455" cy="146" r="7"/><circle cx="545" cy="146" r="7"/><circle cx="580" cy="172" r="7"/><circle cx="500" cy="118" r="8"/>
+</g>
+<rect x="497" y="92" width="6" height="22" fill="url(#gold)"/><rect x="491" y="99" width="18" height="6" fill="url(#gold)"/>
+<line x1="412" y1="250" x2="588" y2="250" stroke="#9c7c30" stroke-width="1.4" opacity="0.45"/>
+<circle cx="455" cy="250" r="4" fill="#0e2848"/><circle cx="500" cy="250" r="4" fill="#0e2848"/><circle cx="545" cy="250" r="4" fill="#0e2848"/>
+
+<!-- SHIELD -->
+<path d="M300,256 L700,256 L700,556 C700,712 622,820 500,880 C378,820 300,712 300,556 Z" fill="url(#gold)" stroke="#9c7c30" stroke-width="2"/>
+<path d="M314,270 L686,270 L686,554 C686,700 616,800 500,856 C384,800 314,700 314,554 Z" fill="url(#navy)"/>
+<path d="M328,284 L672,284 L672,552 C672,690 610,782 500,834 C390,782 328,690 328,552 Z" fill="none" stroke="#caa24a" stroke-width="1.4" opacity="0.7"/>
+
+<!-- TROPHY (clean, centred) -->
+<g>
+<ellipse cx="500" cy="402" rx="72" ry="12" fill="url(#gold)"/>
+<path d="M430,404 C434,474 468,516 500,524 C532,516 566,474 570,404 Z" fill="url(#gold)"/>
+<path d="M431,412 C398,410 392,450 420,466" fill="none" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+<path d="M569,412 C602,410 608,450 580,466" fill="none" stroke="url(#gold)" stroke-width="8" stroke-linecap="round"/>
+<rect x="491" y="524" width="18" height="26" fill="url(#gold)"/>
+<path d="M468,550 L532,550 L522,570 L478,570 Z" fill="url(#gold)"/>
+<rect x="456" y="570" width="88" height="12" rx="3" fill="url(#gold)"/>
+</g>
+
+<!-- EST. 2019 -->
+<line x1="430" y1="648" x2="468" y2="648" stroke="url(#gold)" stroke-width="1.4"/>
+<line x1="532" y1="648" x2="570" y2="648" stroke="url(#gold)" stroke-width="1.4"/>
+<text x="500" y="656" text-anchor="middle" font-family="'Cinzel','Times New Roman',Georgia,serif" font-size="27" letter-spacing="5" fill="url(#gold)" font-weight="600">EST. 2019</text>
+
+<!-- WORDMARK -->
+<g stroke="url(#gold)" stroke-width="1.6"><line x1="250" y1="958" x2="430" y2="958"/><line x1="570" y1="958" x2="750" y2="958"/></g>
+<path d="M500,951 l7,7 -7,7 -7,-7 Z" fill="url(#gold)"/>
+<text x="500" y="1018" text-anchor="middle" font-family="'Cinzel','Times New Roman',Georgia,serif" font-size="43" letter-spacing="5" fill="url(#gold)" font-weight="600">FAMILY WORLD CHAMPIONSHIP</text>
+</svg></div>
+  <h1>FAMILY WORLD CHAMPIONSHIP</h1>
+  <div class="est">EST. 2019</div>
+  <div class="badgerow">
+    <span id="liveBadge" class="snapshot"><span class="dot"></span><span id="liveText">Snapshot</span></span>
+    <span class="updBtn" id="updBtn">&#8635;&nbsp; Update data</span>
+    <input type="file" id="filePick" accept=".xlsx" style="display:none">
+  </div>
+  <p class="asof" id="asofLine"></p>
+  <div class="champStrip" id="champStrip"></div>
+  <div class="chips" id="chips"></div>
+</header>
+
+<main class="wrap">
+
+<section id="stories">
+  <div class="sechead"><h2>The Story So Far</h2><p>the season's live storylines, straight from the numbers</p></div>
+  <div class="storyGrid" id="storyGrid"></div>
+</section>
+
+<section id="race">
+  <div class="sechead"><h2>The Title Race</h2><p>FWC rating, every athlete, gap to the lead</p></div>
+  <div class="panel" id="racePanel" style="padding:12px 4px"></div>
+</section>
+
+<section id="ladder">
+  <div class="sechead"><h2>Live Standings</h2><p>ranked by FWC Rating &middot; tap a column heading to re-sort</p></div>
+  <div class="panel tblScroll"><table id="ladderTbl"></table></div>
+  <p class="tblNote" id="ladderNote"></p>
+</section>
+
+<section id="form">
+  <div class="sechead"><h2>Form Heat Map</h2><p>last 10 games each &middot; oldest left, newest right</p></div>
+  <div class="panel"><div class="formGrid" id="formGrid"></div><div class="legend"><span style="color:var(--win-bright)">&#9632;</span> win &nbsp;&nbsp;<span style="color:var(--loss-bright)">&#9632;</span> loss</div></div>
+</section>
+
+<section id="sports">
+  <div class="sechead"><h2>Sport Leaders</h2><p>the top-rated athlete in every sport</p></div>
+  <div class="sportGrid" id="sportGrid"></div>
+  <div class="pickerRow"><label for="sportPick">Sport ladder</label><select id="sportPick"></select></div>
+  <div class="panel tblScroll"><table id="sportTbl"></table></div>
+  <div class="sechead" style="margin-top:34px"><h2>Sport Mastery</h2><p>win % per athlete per sport &middot; green strong, red weak, blank not played</p></div>
+  <div class="panel tblScroll"><table id="masteryTbl" class="mastery"></table></div>
+</section>
+
+<section id="h2h">
+  <div class="sechead"><h2>Head to Head</h2><p>row athlete's win % against each column athlete &middot; games shown underneath</p></div>
+  <div class="panel"><div class="h2hWrap" id="h2hWrap"></div></div>
+</section>
+
+<section id="records">
+  <div class="sechead"><h2>Records &amp; Awards</h2><p>the headlines of the championship</p></div>
+  <div class="recCols">
+    <div>
+      <h3 style="font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">&#128481;&#65039; Biggest Upsets</h3>
+      <div class="panel recList" id="upsetList"></div>
+    </div>
+    <div>
+      <h3 style="font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">&#128220; Hall of Records</h3>
+      <div class="panel recList" id="recordList"></div>
+    </div>
+  </div>
+  <div class="awardGrid" id="awardGrid"></div>
+</section>
+
+<section id="honour">
+  <div class="sechead"><h2>Roll of Honour</h2><p>Family World Champions since 2019</p></div>
+  <div class="honour">
+    <div class="panel tblScroll"><table id="honourTbl"></table></div>
+    <div class="honourMeta" id="honourMeta"></div>
+  </div>
+</section>
+
+<section id="recent">
+  <div class="sechead"><h2>Latest Results</h2><p>the most recent games logged</p></div>
+  <div class="panel recentList" id="recentList"></div>
+</section>
+
+<section id="wrap">
+  <div class="sechead"><h2>The FWC Weekly</h2><p>the Monday Wrap, with Macca and Robbo</p></div>
+  <div class="panel" id="showPanel"></div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="formula" id="formulaLine">FWC Rating = 1000 + Skill Pts + Form Pts + Arena Pts &middot; Skill and Form are zero-sum, Arena rewards showing up for group games &middot; the Champion is the highest-rated eligible athlete.</p>
+    <p>To refresh with the latest numbers, tap <b>Update data</b> and choose the Championship Tracker file, or simply drag it anywhere onto this page.</p>
+    <p style="margin-top:8px" id="genLine"></p>
+  </div>
+</footer>
+
+<div id="dropOverlay"><div class="msg">Drop the tracker to go live</div></div>
+<div id="toast"></div>
+
+<script>
+/* FWC shared workbook parser. Works in Node (build) and browser (live refresh).
+   Expects a SheetJS workbook object. Returns the dashboard data model. */
+function parseFWC(wb) {
+  function grid(name) {
+    var ws = wb.Sheets[name];
+    if (!ws) return null;
+    return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null, blankrows: true });
+  }
+  function s(v) { return v === null || v === undefined ? '' : String(v).trim(); }
+  function num(v) { var n = typeof v === 'number' ? v : parseFloat(v); return isNaN(n) ? null : n; }
+  function findRow(g, col, test, from) {
+    for (var r = from || 0; r < g.length; r++) {
+      var row = g[r] || [];
+      if (test(s(row[col]))) return r;
+    }
+    return -1;
+  }
+  function fmtDate(v) {
+    if (v instanceof Date) {
+      return v.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][v.getMonth()];
+    }
+    if (typeof v === 'number') { // excel serial
+      var d = new Date(Math.round((v - 25569) * 86400 * 1000));
+      return d.getUTCDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()];
+    }
+    return s(v);
+  }
+  function clean(t) { return s(t).replace(/\s+—\s+/g, ' · ').replace(/—/g, '·'); }
+
+  var data = { generated: new Date().toISOString() };
+
+  /* ---------- Dashboard (standings) ---------- */
+  var g = grid('Dashboard');
+  if (g) {
+    for (var r = 0; r < Math.min(6, g.length); r++) {
+      (g[r] || []).forEach(function (c) {
+        var t = s(c);
+        if (t.indexOf('Standings as of') === 0) data.asOf = t.replace(/\s+·\s+/g, ' · ');
+        if (t.indexOf('Inactivity watch') === 0) data.inactivity = t.replace('Inactivity watch:', '').trim();
+        if (t.indexOf('Current Champion:') === 0) data.champion = t.replace('Current Champion:', '').trim();
+      });
+    }
+    var hr = findRow(g, 0, function (t) { return t === 'Rank'; });
+    data.standings = [];
+    if (hr >= 0) {
+      for (var r2 = hr + 1; r2 < g.length; r2++) {
+        var row = g[r2] || [];
+        if (num(row[0]) === null) break;
+        data.standings.push({
+          rank: num(row[0]), player: s(row[1]), rating: num(row[2]), games: num(row[3]) || 0,
+          won: num(row[4]) || 0, lost: num(row[5]) || 0, winPct: num(row[6]) || 0,
+          skill: num(row[7]) || 0, form: num(row[8]) || 0, arena: num(row[9]) || 0,
+          sports: num(row[10]) || 0, status: s(row[11]), sos: num(row[12]),
+          behind: num(row[13]), streak: s(row[14]), form5: s(row[15]), move: s(row[16]) || '–',
+          lastPlayed: fmtDate(row[17]), wksIdle: num(row[18]), tier: s(row[22]) || s(row[21])
+        });
+      }
+    }
+  }
+
+  /* ---------- Leaders + Roll of Honour ---------- */
+  g = grid('Leaders');
+  if (g) {
+    var lr = findRow(g, 0, function (t) { return t === 'CURRENT LEADER'; });
+    if (lr >= 0) data.leader = { name: s((g[lr + 1] || [])[0]), blurb: s((g[lr + 2] || [])[0]).replace(/\s*\|\s*/g, '  ·  ') };
+    var sh = findRow(g, 0, function (t) { return t === 'Sport'; });
+    data.sportLeaders = [];
+    if (sh >= 0) {
+      for (var r3 = sh + 1; r3 < g.length; r3++) {
+        var row3 = g[r3] || [];
+        if (!s(row3[0])) break;
+        data.sportLeaders.push({ sport: s(row3[0]), leader: s(row3[1]).replace('—',''), rating: num(row3[2]), record: s(row3[3]).replace('—',''), games: num(row3[4]) || 0 });
+      }
+    }
+    var yh = findRow(g, 6, function (t) { return t === 'Year'; });
+    data.rollOfHonour = { rows: [], reigning: '', mostTitles: '' };
+    if (yh >= 0) {
+      for (var r4 = yh + 1; r4 < g.length; r4++) {
+        var row4 = g[r4] || [];
+        var y = s(row4[6]);
+        if (/^\d{4}$/.test(y)) data.rollOfHonour.rows.push({ year: y, champion: clean(s(row4[7])), spoon: clean(s(row4[8])) });
+        if (y.indexOf('Reigning') === 0) data.rollOfHonour.reigning = clean(s(row4[7]));
+        if (y.indexOf('Most titles') === 0) data.rollOfHonour.mostTitles = clean(s(row4[7]));
+      }
+    }
+  }
+
+  /* ---------- Records & Awards ---------- */
+  g = grid('Records & Awards');
+  if (g) {
+    var uh = findRow(g, 1, function (t) { return t === 'Giant-killer'; });
+    data.upsets = [];
+    if (uh >= 0) {
+      for (var r5 = uh + 1; r5 < g.length; r5++) {
+        var row5 = g[r5] || [];
+        if (num(row5[0]) === null) break;
+        data.upsets.push({ n: num(row5[0]), winner: s(row5[1]), beat: s(row5[2]), sport: s(row5[3]), chance: num(row5[4]), when: fmtDate(row5[5]) });
+      }
+    }
+    var hh = findRow(g, 0, function (t) { return t === 'Record'; });
+    data.hallOfRecords = [];
+    if (hh >= 0) {
+      for (var r6 = hh + 1; r6 < g.length; r6++) {
+        var row6 = g[r6] || [];
+        if (!s(row6[0]) || s(row6[0]).indexOf('THE AWARDS') === 0) break;
+        data.hallOfRecords.push({ record: s(row6[0]), value: s(row6[1]), holder: s(row6[2]).replace('—',''), sport: s(row6[3]).replace('—',''), date: fmtDate(row6[4]).replace('—',''), details: s(row6[5]) });
+      }
+    }
+    var ah = findRow(g, 0, function (t) { return t === 'Award'; });
+    data.awards = [];
+    if (ah >= 0) {
+      for (var r7 = ah + 1; r7 < g.length; r7++) {
+        var row7 = g[r7] || [];
+        if (!s(row7[0])) break;
+        data.awards.push({ award: s(row7[0]), holder: s(row7[1]), reason: s(row7[2]) });
+      }
+    }
+  }
+
+  /* ---------- Trends & Stats ---------- */
+  g = grid('Trends & Stats');
+  if (g) {
+    var st = findRow(g, 0, function (t) { return t.indexOf('THE STORY SO FAR') >= 0; });
+    data.storylines = [];
+    if (st >= 0) {
+      for (var r8 = st + 1; r8 < g.length; r8++) {
+        var t8 = s((g[r8] || [])[0]);
+        if (!t8) continue;
+        if (t8.indexOf('THE TITLE RACE') >= 0) break;
+        data.storylines.push(clean(t8));
+      }
+    }
+    var fh = findRow(g, 0, function (t) { return t.indexOf('FORM HEAT MAP') >= 0; });
+    data.formMap = [];
+    if (fh >= 0) {
+      for (var r9 = fh + 1; r9 < g.length; r9++) {
+        var row9 = g[r9] || [];
+        var nm = s(row9[0]);
+        if (nm.indexOf('SPORT MASTERY') >= 0) break;
+        if (!nm || nm.indexOf('last 10') >= 0) continue;
+        var res = [];
+        for (var c9 = 1; c9 <= 10; c9++) { var v9 = s(row9[c9]); if (v9 === 'W' || v9 === 'L') res.push(v9); }
+        data.formMap.push({ player: nm, results: res });
+      }
+    }
+    var mh = findRow(g, 0, function (t) { return t.indexOf('SPORT MASTERY') >= 0; });
+    if (mh >= 0) {
+      var mhead = findRow(g, 0, function (t) { return t === 'Player'; }, mh);
+      if (mhead >= 0) {
+        var sports = [];
+        (g[mhead] || []).forEach(function (c, i) { if (i > 0 && s(c)) sports.push({ i: i, name: s(c) }); });
+        data.mastery = { sports: sports.map(function (x) { return x.name; }), rows: [] };
+        for (var r10 = mhead + 1; r10 < g.length; r10++) {
+          var row10 = g[r10] || [];
+          var nm10 = s(row10[0]);
+          if (!nm10) break;
+          var pct = sports.map(function (x) { return num(row10[x.i]); });
+          data.mastery.rows.push({ player: nm10, pct: pct });
+        }
+      }
+    }
+  }
+
+  /* ---------- Head-to-Head ---------- */
+  g = grid('Head-to-Head');
+  if (g) {
+    var wh = findRow(g, 0, function (t) { return t === 'WIN %'; });
+    if (wh >= 0) {
+      var players = [];
+      (g[wh] || []).forEach(function (c, i) { if (i > 0 && s(c)) players.push(s(c)); });
+      var winPct = [], gamesG = [];
+      for (var rp = 0; rp < players.length; rp++) {
+        var rowp = g[wh + 1 + rp] || [];
+        winPct.push(players.map(function (_, ci) { return s(rowp[ci + 1]); }));
+      }
+      var gh = findRow(g, 0, function (t) { return t === 'GAMES'; }, wh + 1);
+      if (gh >= 0) {
+        for (var rp2 = 0; rp2 < players.length; rp2++) {
+          var rowp2 = g[gh + 1 + rp2] || [];
+          gamesG.push(players.map(function (_, ci) { return num(rowp2[ci + 1]) || 0; }));
+        }
+      }
+      data.h2h = { players: players, winPct: winPct, games: gamesG };
+    }
+  }
+
+  /* ---------- Sport Records (per-sport ladders) ---------- */
+  g = grid('Sport Records');
+  if (g) {
+    function readGrid(anchorText, valueCols) {
+      var a = findRow(g, 0, function (t) { return t.indexOf(anchorText) >= 0; });
+      if (a < 0) return null;
+      var h = findRow(g, 0, function (t) { return t === 'Sport'; }, a);
+      if (h < 0) return null;
+      var players2 = [];
+      (g[h] || []).forEach(function (c, i) {
+        var t = s(c);
+        if (i > 0 && t && ['Games', 'Champion', 'Champ Wins', 'Top rated'].indexOf(t) < 0) players2.push({ i: i, name: t });
+      });
+      var extraIdx = {};
+      (g[h] || []).forEach(function (c, i) { var t = s(c); if (['Games', 'Champion', 'Top rated'].indexOf(t) >= 0) extraIdx[t] = i; });
+      var out = { players: players2.map(function (x) { return x.name; }), sports: [], values: [], extra: [] };
+      for (var r11 = h + 1; r11 < g.length; r11++) {
+        var row11 = g[r11] || [];
+        var sp = s(row11[0]);
+        if (!sp) break;
+        out.sports.push(sp);
+        out.values.push(players2.map(function (x) { return num(row11[x.i]); }));
+        out.extra.push({ games: extraIdx['Games'] != null ? num(row11[extraIdx['Games']]) : null, champion: extraIdx['Champion'] != null ? s(row11[extraIdx['Champion']]).replace('—','') : '', topRated: extraIdx['Top rated'] != null ? s(row11[extraIdx['Top rated']]).replace('—','') : '' });
+      }
+      return out;
+    }
+    var played = readGrid('GAMES PLAYED');
+    var wins = readGrid('WINS');
+    var ratings = readGrid('SPORT RATING');
+    if (played && wins) {
+      data.sportDetail = { players: played.players, sports: played.sports, played: played.values, wins: wins.values, ratings: ratings ? ratings.values : null, totals: played.extra, topRated: ratings ? ratings.extra.map(function (e) { return e.topRated; }) : null };
+    }
+    var tg = findRow(g, 0, function (t) { return t === 'Total games contested'; });
+    if (tg >= 0) data.totalGames = num((g[tg] || [])[2]);
+  }
+
+  /* ---------- Match Log (recent results) ---------- */
+  g = grid('Match Log');
+  if (g) {
+    var mlh = findRow(g, 0, function (t) { return t === 'Game ID'; });
+    var gamesById = {};
+    if (mlh >= 0) {
+      for (var r12 = mlh + 1; r12 < g.length; r12++) {
+        var row12 = g[r12] || [];
+        var gid = num(row12[0]);
+        if (gid === null) continue;
+        if (!gamesById[gid]) gamesById[gid] = { id: gid, date: fmtDate(row12[1]), sport: s(row12[2]), winner: s(row12[6]), field: num(row12[5]) || 2, losers: [] };
+        if (s(row12[4]) === 'Win') {
+          gamesById[gid].chance = num(row12[8]);
+          gamesById[gid].gain = num(row12[12]);
+        } else if (s(row12[3])) {
+          gamesById[gid].losers.push(s(row12[3]));
+        }
+      }
+    }
+    var ids = Object.keys(gamesById).map(Number).sort(function (a, b) { return b - a; });
+    data.recent = ids.slice(0, 10).map(function (id) { return gamesById[id]; });
+  }
+
+  /* ---------- FWC Weekly (The Monday Wrap) ---------- */
+  g = grid('FWC Weekly');
+  if (g) {
+    data.weekly = { subtitle: '', hosts: '', segments: [] };
+    var cur = null;
+    for (var r13 = 0; r13 < g.length; r13++) {
+      var row13 = g[r13] || [];
+      var a = s(row13[0]);
+      if (!a) continue;
+      if (a.indexOf('THE MONDAY WRAP') >= 0) { data.weekly.subtitle = a.replace(/\s+·\s+/g, ' · '); continue; }
+      if (a.indexOf('T H E   F W C') >= 0 || a.indexOf('🏆') === 0) continue;
+      if (a.indexOf('YOUR HOSTS') === 0) { data.weekly.hosts = a.replace('YOUR HOSTS.', '').trim(); continue; }
+      if (a === 'MACCA' || a === 'ROBBO') {
+        var text = '';
+        for (var c13 = 1; c13 < row13.length; c13++) { if (s(row13[c13])) { text = s(row13[c13]); break; } }
+        if (cur && text) cur.lines.push({ speaker: a, text: text });
+      } else if (a === a.toUpperCase() && a.length < 60) {
+        cur = { name: a, lines: [] };
+        data.weekly.segments.push(cur);
+      }
+    }
+  }
+
+  return data;
+}
+if (typeof module !== 'undefined') module.exports = parseFWC;
+
+</script>
+<script>
+var DATA = {"generated":"2026-07-04T13:14:21.069Z","asOf":"Standings as of Game 118 · 4 Jul 2026","inactivity":"all players active ✓","champion":"Dean B","standings":[{"rank":1,"player":"Dean B","rating":1189.3765078898728,"games":23,"won":15,"lost":8,"winPct":0.6521739130434783,"skill":80.73614577004388,"form":56.64036211982874,"arena":52,"sports":3,"status":"Eligible","sos":1074.1779562705763,"behind":0,"streak":"W2","form5":"LLLWW","move":"–","lastPlayed":"16 Jun","wksIdle":2.6,"tier":"Elite"},{"rank":2,"player":"Oscar","rating":1154.7503552131154,"games":39,"won":19,"lost":20,"winPct":0.48717948717948717,"skill":61.05638047248556,"form":32.693974740630075,"arena":61,"sports":7,"status":"Eligible","sos":1062.7009143720043,"behind":34.62615267675733,"streak":"W4","form5":"LWWWW","move":"▲3","lastPlayed":"4 Jul","wksIdle":0,"tier":"Elite"},{"rank":3,"player":"Josh","rating":1147.194555005195,"games":32,"won":20,"lost":12,"winPct":0.625,"skill":35.723163059660365,"form":51.471391945534876,"arena":60,"sports":8,"status":"Eligible","sos":1050.7513326385229,"behind":42.181952884677685,"streak":"L1","form5":"LLWWL","move":"▼1","lastPlayed":"26 Jun","wksIdle":1.1,"tier":"Elite"},{"rank":4,"player":"Aaron","rating":1125.1080177960646,"games":25,"won":15,"lost":10,"winPct":0.6,"skill":41.705142857640425,"form":39.40287493842386,"arena":44,"sports":7,"status":"Eligible","sos":1037.6239185820834,"behind":64.26849009380817,"streak":"W5","form5":"WWWWW","move":"▼1","lastPlayed":"27 Jun","wksIdle":1,"tier":"Elite"},{"rank":5,"player":"Simon","rating":1099.9035033078371,"games":17,"won":10,"lost":7,"winPct":0.5882352941176471,"skill":18.993138966169308,"form":28.910364341667837,"arena":52,"sports":4,"status":"Eligible","sos":1089.4921020396014,"behind":89.47300458203563,"streak":"L3","form5":"WWLLL","move":"▼1","lastPlayed":"15 Jun","wksIdle":2.7,"tier":"Strong"},{"rank":6,"player":"Daniel (Ferret)","rating":1069.478840506906,"games":49,"won":21,"lost":28,"winPct":0.42857142857142855,"skill":-33.31310259861978,"form":27.79194310552588,"arena":75,"sports":11,"status":"Eligible","sos":1068.9293037026482,"behind":119.8976673829668,"streak":"L1","form5":"WLLWL","move":"–","lastPlayed":"29 Jun","wksIdle":0.7,"tier":"Strong"},{"rank":7,"player":"Beau","rating":1044.8691565259944,"games":10,"won":5,"lost":5,"winPct":0.5,"skill":-15.210558333280616,"form":16.07971485927507,"arena":44,"sports":3,"status":"Eligible","sos":1089.5487055180556,"behind":144.50735136387834,"streak":"L2","form5":"LWWLL","move":"–","lastPlayed":"15 Jun","wksIdle":2.7,"tier":"Mid"},{"rank":8,"player":"Dean M","rating":1039.5415973556721,"games":5,"won":2,"lost":3,"winPct":0.4,"skill":-1.9252751900484864,"form":13.466872545720536,"arena":28,"sports":1,"status":"Provisional","sos":1066.7168830610779,"behind":149.83491053420062,"streak":"W2","form5":"LLLWW","move":"–","lastPlayed":"15 Jun","wksIdle":2.7,"tier":"Unranked"},{"rank":9,"player":"Dylan A","rating":1038.5016461247724,"games":4,"won":2,"lost":2,"winPct":0.5,"skill":1.6363549587646489,"form":12.865291166007616,"arena":24,"sports":1,"status":"Provisional","sos":1087.6402060746505,"behind":150.87486176510038,"streak":"L1","form5":"WLWL","move":"–","lastPlayed":"15 Jun","wksIdle":2.7,"tier":"Unranked"},{"rank":10,"player":"Chase","rating":1017.3466608720325,"games":10,"won":5,"lost":5,"winPct":0.5,"skill":7.932375157746623,"form":-1.585714285714288,"arena":11,"sports":6,"status":"Eligible","sos":1073.685180286495,"behind":172.0298470178402,"streak":"W1","form5":"WLLLW","move":"–","lastPlayed":"15 Jun","wksIdle":2.7,"tier":"Mid"},{"rank":11,"player":"Dylan S","rating":1000,"games":0,"won":0,"lost":0,"winPct":0,"skill":0,"form":0,"arena":0,"sports":0,"status":"No games","sos":null,"behind":189.37650788987276,"streak":"","form5":"","move":"–","lastPlayed":"—","wksIdle":null,"tier":"No games"},{"rank":12,"player":"David","rating":990.8737469852914,"games":14,"won":4,"lost":10,"winPct":0.2857142857142857,"skill":-39.08880075295876,"form":-6.037452261749699,"arena":36,"sports":3,"status":"Eligible","sos":1088.6528297296986,"behind":198.50276090458135,"streak":"W2","form5":"LLLWW","move":"▲1","lastPlayed":"15 Jun","wksIdle":2.7,"tier":"Developing"},{"rank":13,"player":"Shawn","rating":956.8482263479484,"games":41,"won":16,"lost":25,"winPct":0.3902439024390244,"skill":-78.06525347105641,"form":-22.086520180995294,"arena":57,"sports":8,"status":"Eligible","sos":1109.6106651006162,"behind":232.52828154192434,"streak":"L4","form5":"WLLLL","move":"▼1","lastPlayed":"4 Jul","wksIdle":0,"tier":"Mid"},{"rank":14,"player":"Cody","rating":894.207186069298,"games":13,"won":2,"lost":11,"winPct":0.15384615384615385,"skill":-80.17971089654674,"form":-33.61310303415522,"arena":8,"sports":3,"status":"Eligible","sos":1110.8515341855841,"behind":295.16932182057474,"streak":"L4","form5":"WLLLL","move":"–","lastPlayed":"15 Jun","wksIdle":2.7,"tier":"Developing"}],"leader":{"name":"Dean B","blurb":"FWC rating 1189  ·  15 wins, 8 losses  ·  highest-rated eligible player"},"sportLeaders":[{"sport":"Chess","leader":"Shawn","rating":1031,"record":"2–0","games":1},{"sport":"Darts","leader":"","rating":null,"record":"","games":0},{"sport":"FIFA","leader":"Aaron","rating":1051,"record":"6–2","games":4},{"sport":"Golf","leader":"","rating":null,"record":"","games":0},{"sport":"Pool","leader":"Simon","rating":1030,"record":"2–0","games":3},{"sport":"Kelly Pool","leader":"Aaron","rating":1016,"record":"1–0","games":1},{"sport":"Target","leader":"","rating":null,"record":"","games":0},{"sport":"Snooker","leader":"","rating":null,"record":"","games":0},{"sport":"Putt Putt","leader":"Josh","rating":1016,"record":"1–0","games":2},{"sport":"Back Yard Putt Putt","leader":"","rating":null,"record":"","games":0},{"sport":"Sting Pong","leader":"","rating":null,"record":"","games":0},{"sport":"Table Tennis","leader":"Josh","rating":1109,"record":"13–2","games":29},{"sport":"Mario Party","leader":"Daniel (Ferret)","rating":1045,"record":"3–0","games":7},{"sport":"Mario Kart","leader":"Chase","rating":1056,"record":"4–0","games":14},{"sport":"Go Karting","leader":"","rating":null,"record":"","games":0},{"sport":"Call of Duty","leader":"Daniel (Ferret)","rating":1031,"record":"2–0","games":3},{"sport":"Poker","leader":"Josh","rating":1016,"record":"1–0","games":2},{"sport":"ShuffleBoard","leader":"Simon","rating":1060,"record":"8–3","games":49},{"sport":"Mario Golf","leader":"Josh","rating":1005,"record":"2–2","games":4}],"rollOfHonour":{"rows":[{"year":"2019","champion":"Shawn","spoon":"Beau"},{"year":"2020","champion":"Josh","spoon":"Aaron"},{"year":"2021","champion":"Aaron","spoon":"David"},{"year":"2022","champion":"Josh  👑","spoon":"Shawn"},{"year":"2023","champion":"· not contested ·","spoon":""},{"year":"2024","champion":"· not contested ·","spoon":""},{"year":"2025","champion":"· not contested ·","spoon":""},{"year":"2026","champion":"in progress","spoon":"see current leader"}],"reigning":"Josh (2022)","mostTitles":"Josh · 2 crowns"},"upsets":[{"n":1,"winner":"Daniel (Ferret)","beat":"Shawn","sport":"FIFA","chance":20,"when":"30 May"},{"n":2,"winner":"Daniel (Ferret)","beat":"Oscar","sport":"Mario Kart","chance":25,"when":"3 Jun"},{"n":3,"winner":"Josh","beat":"Daniel (Ferret)","sport":"Mario Golf","chance":25,"when":"26 Jun"},{"n":4,"winner":"Dean B","beat":"Josh","sport":"Table Tennis","chance":27,"when":"3 Jun"},{"n":5,"winner":"Daniel (Ferret)","beat":"Shawn","sport":"FIFA","chance":29,"when":"31 May"},{"n":6,"winner":"Oscar","beat":"Dean B","sport":"Pool","chance":29,"when":"4 Jun"},{"n":7,"winner":"Oscar","beat":"Josh","sport":"Table Tennis","chance":31,"when":"3 Jun"},{"n":8,"winner":"Daniel (Ferret)","beat":"David","sport":"Table Tennis","chance":33,"when":"2 Jun"}],"hallOfRecords":[{"record":"Highest FWC rating ever reached","value":"1191","holder":"Josh","sport":"Table Tennis","date":"3 Jun 2026","details":"vs Dean B"},{"record":"Biggest single-game rating gain","value":"+43","holder":"Aaron","sport":"Kelly Pool","date":"2 Jun 2026","details":"won 8-player game"},{"record":"Biggest single-game rating drop","value":"-32","holder":"Josh","sport":"Table Tennis","date":"3 Jun 2026","details":"lost to Oscar"},{"record":"Biggest upset win","value":"20%","holder":"Daniel (Ferret)","sport":"FIFA","date":"30 May","details":"beat Shawn"},{"record":"Most games played","value":"49","holder":"Daniel (Ferret)","sport":"","date":"","details":"across 11 sports"},{"record":"Most sports played","value":"11","holder":"Daniel (Ferret)","sport":"","date":"","details":"of 19 sports available"},{"record":"Most-contested sport","value":"49 games","holder":"ShuffleBoard","sport":"","date":"","details":"the family favourite"},{"record":"Longest active win streak","value":"5 wins","holder":"Aaron","sport":"","date":"","details":"ongoing"}],"awards":[{"award":"🏆 The Champion","holder":"Dean B","reason":"highest-rated eligible player"},{"award":"🗡️ Giant Killer","holder":"Daniel (Ferret)","reason":"most underdog wins"},{"award":"🐎 Iron Man","holder":"Daniel (Ferret)","reason":"most games played"},{"award":"🌍 The Generalist","holder":"Daniel (Ferret)","reason":"plays the most sports"},{"award":"🔥 On Fire","holder":"Aaron","reason":"best form over last 5 games"},{"award":"📉 Wooden Spoon","holder":"Cody","reason":"lowest rating — keep grinding"}],"storylines":["👑  Dean B leads the title race · 35 points clear of Oscar.","🔥  Aaron is on a heater · 5 wins in a row!","🥶  Shawn can't take a trick · 4 losses on the spin, well overdue a win.","📈  Oscar is surging · up 3 place(s) since last week.","🗡️  Daniel (Ferret) is the giant-killer · 4 win(s) against the odds.","🐎  Daniel (Ferret) never misses a session · 49 games, more than anyone.","🎯  Simon rules ShuffleBoard · the family's most-played game with 49 contests.","🎲  118 games played across 12 different sports · and counting."],"formMap":[{"player":"Aaron","results":["L","W","W","L","L","W","W","W","W","W"]},{"player":"Beau","results":["L","W","W","L","W","L","W","W","L","L"]},{"player":"Chase","results":["L","L","W","W","W","W","L","L","L","W"]},{"player":"David","results":["L","W","L","W","L","L","L","L","W","W"]},{"player":"Josh","results":["W","L","W","L","L","L","L","W","W","L"]},{"player":"Shawn","results":["L","L","L","L","L","W","L","L","L","L"]},{"player":"Simon","results":["W","L","W","L","L","W","W","L","L","L"]},{"player":"Daniel (Ferret)","results":["W","L","L","L","W","W","L","L","W","L"]},{"player":"Dean B","results":["W","W","L","W","W","L","L","L","W","W"]},{"player":"Cody","results":["L","L","L","L","W","W","L","L","L","L"]},{"player":"Oscar","results":["L","W","W","W","W","L","W","W","W","W"]},{"player":"Dean M","results":["L","L","L","W","W"]},{"player":"Dylan A","results":["W","L","W","L"]},{"player":"Dylan S","results":[]}],"mastery":{"sports":["Chess","Darts","FIFA","Golf","Pool","Kelly Pool","Target","Snooker","Putt Putt","Back Yard Putt Putt","Sting Pong","Table Tennis","Mario Party","Mario Kart","Go Karting","Call of Duty","Poker","ShuffleBoard","Mario Golf"],"rows":[{"player":"Aaron","pct":[null,null,0.75,null,null,1,null,null,null,null,null,0.5,0.5,1,null,0.5,null,0.2857142857142857,null]},{"player":"Beau","pct":[null,null,null,null,0,null,null,null,null,null,null,0,null,null,null,null,null,0.625,null]},{"player":"Chase","pct":[null,null,0,null,null,0,null,null,null,null,null,null,null,1,null,0,0,1,null]},{"player":"David","pct":[null,null,null,null,null,0,null,null,null,null,null,0.16666666666666666,null,null,null,null,null,0.42857142857142855,null]},{"player":"Josh","pct":[null,null,0,null,null,0,null,null,1,null,null,0.8666666666666667,0,null,null,null,1,0.375,0.5]},{"player":"Shawn","pct":[1,null,0.46153846153846156,null,null,0,null,null,0,null,null,1,0.2,0,null,null,null,0.4444444444444444,null]},{"player":"Simon","pct":[null,null,null,null,1,0,null,null,null,null,null,0,null,null,null,null,null,0.7272727272727273,null]},{"player":"Daniel (Ferret)","pct":[0,null,0.4444444444444444,null,0.5,0,null,null,null,null,null,0.14285714285714285,1,0.2857142857142857,null,1,0,0.5555555555555556,0.5]},{"player":"Dean B","pct":[null,null,null,null,0.5,null,null,null,null,null,null,0.8,null,null,null,null,null,0.7,null]},{"player":"Cody","pct":[null,null,null,null,0,null,null,null,null,null,null,0,null,null,null,null,null,0.2857142857142857,null]},{"player":"Oscar","pct":[null,null,null,null,0.5,0,null,null,0,null,null,0.5454545454545454,0.3333333333333333,0.7142857142857143,null,null,null,0.4166666666666667,null]},{"player":"Dean M","pct":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.4,null]},{"player":"Dylan A","pct":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0.5,null]},{"player":"Dylan S","pct":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]}]},"h2h":{"players":["Aaron","Beau","Chase","David","Josh","Shawn","Simon","Daniel (Ferret)","Dean B","Cody","Oscar","Dean M","Dylan A","Dylan S"],"winPct":[["—","","100% of 3","50% of 4","100% of 2","73% of 11","50% of 4","60% of 5","50% of 2","","50% of 4","0% of 1","",""],["","—","","0% of 1","0% of 1","0% of 1","67% of 3","100% of 2","100% of 2","100% of 1","40% of 5","0% of 1","",""],["0% of 3","","—","","0% of 1","","","80% of 5","","100% of 1","","","",""],["50% of 4","100% of 1","","—","25% of 4","100% of 1","0% of 1","0% of 3","0% of 3","100% of 1","0% of 1","","",""],["0% of 2","100% of 1","100% of 1","75% of 4","—","50% of 2","50% of 2","58% of 12","40% of 5","100% of 4","67% of 6","0% of 1","100% of 1",""],["27% of 11","100% of 1","","0% of 1","50% of 2","—","50% of 2","56% of 18","33% of 3","","13% of 8","0% of 1","100% of 1",""],["50% of 4","33% of 3","","100% of 1","50% of 2","50% of 2","—","","100% of 2","100% of 2","40% of 5","100% of 1","50% of 2",""],["40% of 5","0% of 2","20% of 5","100% of 3","42% of 12","44% of 18","","—","25% of 4","100% of 2","80% of 5","100% of 2","0% of 1",""],["50% of 2","0% of 2","","100% of 3","60% of 5","67% of 3","0% of 2","75% of 4","—","100% of 1","83% of 6","100% of 2","0% of 1",""],["","0% of 1","0% of 1","0% of 1","0% of 4","","0% of 2","0% of 2","0% of 1","—","67% of 3","","",""],["50% of 4","60% of 5","","100% of 1","33% of 6","88% of 8","60% of 5","20% of 5","17% of 6","33% of 3","—","100% of 1","50% of 2",""],["100% of 1","100% of 1","","","100% of 1","100% of 1","0% of 1","0% of 2","0% of 2","","0% of 1","—","",""],["","","","","0% of 1","0% of 1","50% of 2","100% of 1","100% of 1","","50% of 2","","—",""],["","","","","","","","","","","","","","—"]],"games":[[0,3,3,4,2,11,4,5,2,2,4,1,0,0],[3,0,0,1,1,1,3,2,2,1,5,1,4,0],[3,0,0,1,2,1,1,7,0,1,1,0,0,0],[4,1,1,0,5,2,2,4,3,1,2,5,0,0],[2,1,2,5,0,10,3,13,5,4,7,1,1,0],[11,1,1,2,10,0,3,19,3,0,12,1,1,0],[4,3,1,2,3,3,0,1,2,2,13,1,2,0],[5,2,7,4,13,19,1,0,12,2,6,2,1,0],[2,2,0,3,5,3,2,12,0,1,6,2,1,0],[2,1,1,1,4,0,2,2,1,0,3,0,0,0],[4,5,1,2,7,12,13,6,6,3,0,1,2,0],[1,1,0,5,1,1,1,2,2,0,1,0,0,0],[0,4,0,0,1,1,2,1,1,0,2,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0]]},"sportDetail":{"players":["Aaron","Beau","Chase","David","Josh","Shawn","Simon","Daniel (Ferret)","Dean B","Cody","Oscar","Dean M","Dylan A","Dylan S"],"sports":["Chess","Darts","FIFA","Golf","Pool","Kelly Pool","Target","Snooker","Putt Putt","Back Yard Putt Putt","Sting Pong","Table Tennis","Mario Party","Mario Kart","Go Karting","Call of Duty","Poker","ShuffleBoard","Mario Golf"],"played":[[0,0,0,0,0,2,0,2,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[8,0,1,0,1,13,0,9,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,2,4,8,1,4,0,0,0],[1,0,1,1,1,1,1,1,0,0,1,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,1,0,0,0,0,1,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[2,1,0,6,15,3,3,7,5,5,11,0,0,0],[2,0,0,0,1,5,0,3,0,0,3,0,0,0],[3,0,4,0,0,7,0,7,0,0,7,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[2,0,2,0,0,0,0,2,0,0,0,0,0,0],[0,0,1,0,1,0,0,1,0,0,0,0,0,0],[7,8,1,7,8,9,11,9,10,7,12,5,4,0],[0,0,0,0,4,0,0,4,0,0,0,0,0,0]],"wins":[[0,0,0,0,0,2,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[6,0,0,0,0,6,0,4,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,2,2,4,0,2,0,0,0],[1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[1,0,0,1,13,3,0,1,4,0,6,0,0,0],[1,0,0,0,0,1,0,3,0,0,1,0,0,0],[3,0,4,0,0,0,0,2,0,0,5,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0],[1,0,0,0,0,0,0,2,0,0,0,0,0,0],[0,0,0,0,1,0,0,0,0,0,0,0,0,0],[2,5,1,3,3,4,8,5,7,2,5,2,2,0],[0,0,0,0,2,0,0,2,0,0,0,0,0,0]],"ratings":[[null,null,null,null,null,1030.5304984710244,null,969.4695015289755,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null,null,null,null,null],[1050.9933109481403,null,984.736306793522,null,984,980.0350485823603,null,1000.2353336759772,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null,null,null,null,null],[null,983.4232010284366,null,null,null,null,1030.1044213761372,996.1760934802999,1001.4492063389166,984.8007393996054,1004.0463383766044,null,null,null],[1016,null,997.7142857142857,997.7142857142857,997.7142857142857,997.7142857142857,997.7142857142857,997.7142857142857,null,null,997.7142857142857,null,null,null],[null,null,null,null,null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null,null,null,null,null],[null,null,null,null,1016,992,null,null,null,null,992,null,null,null],[null,null,null,null,null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null,null,null,null,null],[998.7860114918398,984.8495993159387,null,949.2260088328939,1109.0218511200758,1043.747133633611,952.6465685241009,941.8024108378708,1055.7052432790952,930.5985886904107,1033.6165842741636,null,null,null],[1000.1160292001913,null,null,null,985.4190982364423,968.4410572573736,null,1045.4774155322991,null,null,1000.5463997736937,null,null,null],[1041.6585373017128,null,1055.8009426289977,null,null,904.6564751401817,null,962.9164134350189,null,null,1034.967631494089,null,null,null],[null,null,null,null,null,null,null,null,null,null,null,null,null,null],[1000.0339081301692,null,968.7023986633528,null,null,null,null,1031.263693206478,null,null,null,null,null,null],[null,null,992,null,1016,null,null,992,null,null,null,null,null,null],[965.9488328786229,1021.3645876209866,1015.263693206478,995.7274848990318,980.5272156354744,994.8757569701081,1060.169337887423,993.3213917696951,1039.1570131462133,977.6810158637362,959.9254760633686,995.7274848990318,1000.3107091598305,null],[null,null,null,null,1005.3331712136038,null,null,994.6668287863961,null,null,null,null,null,null]],"totals":[{"games":1,"champion":"Shawn","topRated":""},{"games":0,"champion":"","topRated":""},{"games":4,"champion":"Aaron","topRated":""},{"games":0,"champion":"","topRated":""},{"games":3,"champion":"Dean B","topRated":""},{"games":1,"champion":"Aaron","topRated":""},{"games":0,"champion":"","topRated":""},{"games":0,"champion":"","topRated":""},{"games":2,"champion":"Josh","topRated":""},{"games":0,"champion":"","topRated":""},{"games":0,"champion":"","topRated":""},{"games":29,"champion":"Josh","topRated":""},{"games":7,"champion":"Daniel (Ferret)","topRated":""},{"games":14,"champion":"Oscar","topRated":""},{"games":0,"champion":"","topRated":""},{"games":3,"champion":"Daniel (Ferret)","topRated":""},{"games":2,"champion":"Josh","topRated":""},{"games":49,"champion":"Simon","topRated":""},{"games":4,"champion":"Josh","topRated":""}],"topRated":["Shawn","","Aaron","","Simon","Aaron","","","Josh","","","Josh","Daniel (Ferret)","Chase","","Daniel (Ferret)","Josh","Simon","Josh"]},"totalGames":115,"recent":[{"id":118,"date":"4 Jul","sport":"Mario Party","winner":"Oscar","field":2,"losers":["Shawn"],"chance":0.4285714285714286,"gain":17.769298258210892},{"id":117,"date":"4 Jul","sport":"Mario Kart","winner":"Oscar","field":2,"losers":["Shawn"],"chance":0.8333333333333334,"gain":12.634646880123086},{"id":116,"date":"4 Jul","sport":"Mario Kart","winner":"Oscar","field":2,"losers":["Shawn"],"chance":0.8,"gain":14.07911059095056},{"id":115,"date":"4 Jul","sport":"Mario Kart","winner":"Oscar","field":2,"losers":["Shawn"],"chance":0.75,"gain":15.906544232802291},{"id":114,"date":"29 Jun","sport":"Chess","winner":"Shawn","field":2,"losers":["Daniel (Ferret)"],"chance":0.6666666666666666,"gain":23.50556603079671},{"id":113,"date":"27 Jun","sport":"Mario Kart","winner":"Aaron","field":2,"losers":["Shawn"],"chance":0.7894736842105263,"gain":14.044530016305924},{"id":112,"date":"27 Jun","sport":"Mario Kart","winner":"Aaron","field":2,"losers":["Shawn"],"chance":0.7272727272727273,"gain":15.912137937696933},{"id":111,"date":"27 Jun","sport":"Mario Kart","winner":"Aaron","field":2,"losers":["Shawn"],"chance":0.6000000000000001,"gain":18.79523848315729},{"id":110,"date":"27 Jun","sport":"FIFA","winner":"Aaron","field":2,"losers":["Shawn"],"chance":0.5714285714285715,"gain":19.716729369230766},{"id":109,"date":"27 Jun","sport":"FIFA","winner":"Aaron","field":2,"losers":["Shawn"],"chance":0.5371900826446282,"gain":21.794100672595444}],"weekly":{"subtitle":"THE MONDAY WRAP · with Macca and Robbo · Week ending Monday 29 June 2026","hosts":"Trent 'Macca' Maclean, thirty years in the box and a former champion himself, the biggest voice in the game and never short of a bold call.   Dr Rob 'Robbo' Sinclair, ex elite competitor turned analyst, builds his own ratings models and lives for the number nobody else spotted.","segments":[{"name":"COLD OPEN","lines":[{"speaker":"MACCA","text":"Good morning and welcome to the Wrap, the only place that treats a backyard championship like the world title it actually is. Pri, I have called a lot of hot streaks in my time, but I am not sure I have ever seen anyone catch fire quite like Aaron did this week."},{"speaker":"ROBBO","text":"He has not lost in five, Macca. Five wins from five, a form rating sitting on a perfect hundred, and he did it the hard way. Ten games, seven wins, and most of them came against a bloke who has been a genuine thorn in his side for months."},{"speaker":"MACCA","text":"Shawn. And we will get to that little tit for tat, because it was brutal to watch."},{"speaker":"ROBBO","text":"It was a clinic. But here is the thing nobody is saying out loud. Aaron is now the single highest rated athlete in this entire championship on the Athlete Index. Eighty one point six. That is higher than the bloke sitting on top of the ladder."},{"speaker":"MACCA","text":"Hang on. The man on top of the ladder is Dean B."},{"speaker":"ROBBO","text":"Exactly my point. Hold that thought."}]},{"name":"THE TITLE RACE","lines":[{"speaker":"MACCA","text":"Let us do the ladder, because it tells two stories at once. Dean B is your number one, a rating of eleven eighty nine, clear at the top. Josh sits second on eleven forty seven. Then it is Aaron charging into third on eleven twenty five."},{"speaker":"ROBBO","text":"And the gap from first to third is only sixty four points. In this comp that is two good nights of work. But watch what is propping Dean B up. His skill rating is ninety seven point three, the highest number anybody has posted all season. When the man plays, he is ruthless."},{"speaker":"MACCA","text":"I can sense a but the size of a house coming."},{"speaker":"ROBBO","text":"He has done it across three sports, Macca. Three. His versatility score is sixty seven. Aaron, Josh, Oscar, Shawn and Daniel are all sitting on a perfect hundred for versatility because they will play anything you put in front of them. Dean B is a specialist sitting on a lead, and he did not log a single game this week."},{"speaker":"MACCA","text":"So the crown is real, but the throne might be wobbling."},{"speaker":"ROBBO","text":"That is exactly how I would call it."}]},{"name":"THE FORM DESK","lines":[{"speaker":"MACCA","text":"Form desk. Aaron we have covered, the perfect five. Who else is warm?"},{"speaker":"ROBBO","text":"Oscar. And this is the one nobody is watching. Four wins from his last five, a form rating of eighty, an Athlete Index of seventy three that is line ball with Dean B and Josh, and he is sitting quietly in fifth. He did not even play this week and he is still one of the three best athletes in the comp by the numbers."},{"speaker":"MACCA","text":"The lurker."},{"speaker":"ROBBO","text":"The lurker. Now for the bad news, and it is wearing Simon's colours. Rank four on the ladder, but three straight losses, and his last five reads win, win, loss, loss, loss. That arrow is pointing the wrong way in a hurry."},{"speaker":"MACCA","text":"From a top four seed, that one will sting."}]},{"name":"RIVALRY CORNER","lines":[{"speaker":"MACCA","text":"Right. The main event. Aaron versus Shawn. Tell them what happened."},{"speaker":"ROBBO","text":"Seven to three. That is how their personal duel finished this week across Mario Party, FIFA and Mario Kart. And the Mario Kart leg was the killer. Aaron swept it three nil."},{"speaker":"MACCA","text":"Three from three on the karts. No reply."},{"speaker":"ROBBO","text":"It pushes Aaron's all time record over Shawn out to seventy three percent across eleven decided games. When these two play, it is Aaron's world. But do not feel too sorry for Shawn, because he gave us the other great rivalry story of the week."},{"speaker":"MACCA","text":"The Ferret."},{"speaker":"ROBBO","text":"Shawn and Daniel the Ferret have now shared nineteen games. Nineteen. That is the most played pairing in the history of this championship, and it is desperately tight. Shawn leads it fifty six to forty four. And this very morning Shawn snapped a four game losing skid by beating Daniel at the chess board."},{"speaker":"MACCA","text":"Ended the slide with his brain instead of his thumbs. I love it."},{"speaker":"ROBBO","text":"And keep one eye on Josh and Daniel. They split their Mario Golf duel two games apiece, but the real headline was Josh knocking off the Ferret in a contest where our model gave him a twenty five percent chance. Upset of the week, no question about it."}]},{"name":"THE NUMBERS NOBODY IS TALKING ABOUT","lines":[{"speaker":"MACCA","text":"This is my favourite segment. Pri, give me the stat that changes how people see this week."},{"speaker":"ROBBO","text":"Daniel the Ferret. Forty nine games played, across eleven different sports. Nobody in this championship has played more, and nobody has played wider. He is the Iron Man and the all rounder rolled into one human being."},{"speaker":"MACCA","text":"I feel another but coming on."},{"speaker":"ROBBO","text":"His win rate is forty three percent. So the question for the Ferret is a simple one. Is it time to stop collecting new sports and start winning the ones he is already best at?"},{"speaker":"MACCA","text":"Give me one more."},{"speaker":"ROBBO","text":"Shawn. Everyone sees rank eleven and writes him off. But he carries one of the toughest strength of schedule numbers of any regular in the comp, seventy four point six, and he played eleven games this week, more than any other human in the championship. He is grinding the hardest road there is, and the ranking will catch up to the effort."},{"speaker":"MACCA","text":"And the bloke at the foot of the table?"},{"speaker":"ROBBO","text":"Cody. And I will be honest, it is grim reading. He is winless in his head to head record, nought percent against the field. But here is the twist. His strength of schedule is seventy five, the toughest in the entire comp. He is not losing to easybeats, he is losing to the very best. One win against that calibre and the dam could break."}]},{"name":"WHAT WE ARE WATCHING NEXT","lines":[{"speaker":"MACCA","text":"Next week. What are your eyes on?"},{"speaker":"ROBBO","text":"Aaron. He is twenty two points behind Josh and sixty four behind Dean B. If he holds this form for one more week, we are talking about a brand new name at the very top of this championship."},{"speaker":"MACCA","text":"And Dean B has a decision to make. Defend that lead, or keep sitting on it."},{"speaker":"ROBBO","text":"Sitting still is not free in this format. Every week you do not play, the chasers close the gap. I want to see the champion come out and answer the question."},{"speaker":"MACCA","text":"For mine, I want game twenty of Shawn versus the Ferret. Nineteen all square in the rear view mirror, the whole rivalry balanced on a knife's edge."},{"speaker":"ROBBO","text":"Book it."}]},{"name":"THE SIGN OFF","lines":[{"speaker":"MACCA","text":"That is the Wrap. Aaron is flying, Dean B is suddenly under pressure, and the Ferret keeps racking up the miles. Get your games in, because the numbers are watching even when we are not."},{"speaker":"ROBBO","text":"Play more, play smart, and we will see you next Monday."},{"speaker":"MACCA","text":"Same chairs, fresh numbers. Cheers all."}]}]}};
+var TRACKER_CANDIDATES = (function(){var a=[];for(var v=30;v>=8;v--)a.push('FWC_Championship_Tracker_'+v+'.xlsx');a.push('FWC_Championship_8_VIEW-ONLY.xlsx');return a})();
+
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function shortName(n){return n.replace(' (Ferret)','')}
+function pct(v){return v==null?'':Math.round(v*100)+'%'}
+function pctSmart(v){if(v==null||v==='')return'';var n=parseFloat(v);if(isNaN(n))return String(v);return (n>1?Math.round(n):Math.round(n*100))+'%'}
+
+function renderAll(d){
+  /* hero */
+  document.getElementById('asofLine').textContent=(d.asOf||'')+(d.inactivity?'   ·   Inactivity watch: '+d.inactivity:'');
+  var lead=(d.standings||[]).filter(function(p){return p.status==='Eligible'})[0]||{};
+  document.getElementById('champStrip').innerHTML=
+    '<span class="crown">&#128081;</span><span class="lab">Current Champion</span><span class="who">'+esc(d.champion||lead.player||'')+'</span>'+
+    (d.leader&&d.leader.blurb?'<span class="blurb">'+esc(d.leader.blurb)+'</span>':'');
+  var totGames=d.totalGames, totSports=0, act=0;
+  if(d.sportDetail){d.sportDetail.totals.forEach(function(t){if(t.games>0)totSports++;})}
+  (d.standings||[]).forEach(function(p){if(p.games>0)act++;});
+  var iron=(d.standings||[]).slice().sort(function(a,b){return b.games-a.games})[0]||{};
+  var chips=[[totGames,'Games played'],[totSports,'Sports contested'],[act,'Active athletes'],[iron.games,'Most games · '+shortName(iron.player||'')]];
+  document.getElementById('chips').innerHTML=chips.map(function(c){return '<div class="chip"><b>'+esc(c[0])+'</b><span>'+esc(c[1])+'</span></div>'}).join('');
+
+  /* storylines */
+  document.getElementById('storyGrid').innerHTML=(d.storylines||[]).map(function(t){return '<div class="story">'+esc(t)+'</div>'}).join('');
+
+  /* title race */
+  var st=(d.standings||[]).slice().sort(function(a,b){return b.rating-a.rating});
+  var maxR=Math.max.apply(null,st.map(function(p){return p.rating}));
+  var minR=Math.min.apply(null,st.map(function(p){return p.rating}));
+  var span=Math.max(maxR-minR,1);
+  document.getElementById('racePanel').innerHTML=st.map(function(p,i){
+    var w=18+82*(p.rating-minR)/span;
+    var elig=p.status==='Eligible';
+    var gap=p.behind==null||p.behind===0?(elig?'leader':''):Math.round(p.behind)+' behind';
+    if(!elig)gap=p.status.toLowerCase();
+    return '<div class="raceRow'+(i===0?' lead':'')+(elig?'':' ineligible')+'"><span class="nm">'+esc(shortName(p.player))+'</span><div class="barTrack"><div class="bar" style="width:'+w.toFixed(1)+'%">'+Math.round(p.rating)+'</div></div><span class="gap">'+esc(gap)+'</span></div>';
+  }).join('');
+
+  /* ladder */
+  renderLadder(d,'rank',true);
+
+  /* form heat map */
+  document.getElementById('formGrid').innerHTML=(d.formMap||[]).filter(function(f){return f.results.length}).map(function(f){
+    var cells='';
+    for(var i=0;i<10-f.results.length;i++)cells+='<span class="fc E"></span>';
+    f.results.forEach(function(r){cells+='<span class="fc '+r+'">'+r+'</span>'});
+    return '<div class="formRow"><span class="nm">'+esc(shortName(f.player))+'</span><div class="cells">'+cells+'</div></div>';
+  }).join('');
+
+  /* sport cards */
+  document.getElementById('sportGrid').innerHTML=(d.sportLeaders||[]).map(function(sp){
+    if(!sp.leader)return '<div class="scard empty"><h4>'+esc(sp.sport)+'</h4><div class="ldr">not yet contested</div></div>';
+    return '<div class="scard"><span class="gbadge">'+sp.games+' game'+(sp.games===1?'':'s')+'</span><h4>'+esc(sp.sport)+'</h4><div class="ldr">&#128081; '+esc(shortName(sp.leader))+'</div><div class="meta">rating '+Math.round(sp.rating)+' &middot; record '+esc(sp.record)+'</div></div>';
+  }).join('');
+
+  /* sport ladder picker */
+  var pick=document.getElementById('sportPick');
+  if(d.sportDetail){
+    var opts=d.sportDetail.sports.map(function(sp,i){return {sp:sp,i:i,g:d.sportDetail.totals[i].games||0}}).filter(function(o){return o.g>0}).sort(function(a,b){return b.g-a.g});
+    pick.innerHTML=opts.map(function(o){return '<option value="'+o.i+'">'+esc(o.sp)+' ('+o.g+' games)</option>'}).join('');
+    pick.onchange=function(){renderSportLadder(d,parseInt(pick.value,10))};
+    if(opts.length)renderSportLadder(d,opts[0].i);
+  }
+
+  /* mastery heat map */
+  if(d.mastery){
+    var keepS=d.mastery.sports.map(function(sp,i){return d.mastery.rows.some(function(r){return r.pct[i]!=null})});
+    var mh='<thead><tr><th>Athlete</th>'+d.mastery.sports.map(function(sp,i){return keepS[i]?'<th class="num">'+esc(sp)+'</th>':''}).join('')+'</tr></thead><tbody>';
+    d.mastery.rows.forEach(function(r){
+      if(!r.pct.some(function(v){return v!=null}))return;
+      mh+='<tr><td class="pname">'+esc(shortName(r.player))+'</td>';
+      r.pct.forEach(function(v,i){
+        if(!keepS[i])return;
+        if(v==null){mh+='<td class="num" style="color:var(--faint)"></td>';return}
+        var a=0.10+0.34*Math.abs(v-0.5)*2;
+        var bg=v>=0.5?'rgba(63,160,106,'+a.toFixed(2)+')':'rgba(192,80,77,'+a.toFixed(2)+')';
+        mh+='<td class="num" style="background:'+bg+';font-family:var(--cond);font-weight:600">'+Math.round(v*100)+'%</td>';
+      });
+      mh+='</tr>';
+    });
+    document.getElementById('masteryTbl').innerHTML=mh+'</tbody>';
+  }
+
+  /* h2h */
+  renderH2H(d);
+
+  /* records */
+  document.getElementById('upsetList').innerHTML=(d.upsets||[]).map(function(u){
+    return '<div class="recItem"><span class="n">'+u.n+'</span><span class="txt"><b>'+esc(shortName(u.winner))+'</b> beat <b>'+esc(shortName(u.beat))+'</b> at '+esc(u.sport)+'<span class="oddsTag">'+pctSmart(u.chance)+' chance</span></span><span class="when">'+esc(u.when)+'</span></div>';
+  }).join('');
+  document.getElementById('recordList').innerHTML=(d.hallOfRecords||[]).map(function(r){
+    var extra=[r.holder?shortName(r.holder):'',r.sport,r.date].filter(Boolean).join(' · ');
+    return '<div class="recItem"><span class="txt"><b>'+esc(r.value)+'</b> &nbsp;'+esc(r.record)+(extra?'<br><span style="color:var(--muted);font-size:12.5px">'+esc(extra)+(r.details?' · '+esc(r.details):'')+'</span>':'')+'</span></div>';
+  }).join('');
+  document.getElementById('awardGrid').innerHTML=(d.awards||[]).map(function(a){
+    var m=a.award.match(/^(\S+)\s+(.*)$/);var emoji=m?m[1]:'&#127942;';var name=m?m[2]:a.award;
+    return '<div class="award"><div class="emoji">'+emoji+'</div><h4>'+esc(name)+'</h4><div class="who">'+esc(shortName(a.holder))+'</div><div class="for">'+esc(a.reason)+'</div></div>';
+  }).join('');
+
+  /* roll of honour */
+  var roh=d.rollOfHonour||{rows:[]};
+  document.getElementById('honourTbl').innerHTML='<thead><tr><th>Year</th><th>Champion</th><th>Wooden Spoon</th></tr></thead><tbody>'+
+    roh.rows.map(function(r){
+      var nc=r.champion.indexOf('not contested')>=0;
+      return '<tr><td class="yr">'+esc(r.year)+'</td><td class="'+(nc?'nc':'pname')+'">'+esc(r.champion)+'</td><td class="'+(nc?'nc':'')+'">'+esc(nc?'':r.spoon)+'</td></tr>';
+    }).join('')+'</tbody>';
+  document.getElementById('honourMeta').innerHTML=
+    (roh.reigning?'<div class="chip"><b style="font-size:17px">'+esc(roh.reigning)+'</b><span>Reigning champion</span></div>':'')+
+    (roh.mostTitles?'<div class="chip"><b style="font-size:17px">'+esc(roh.mostTitles)+'</b><span>Most titles</span></div>':'');
+
+  /* recent */
+  document.getElementById('recentList').innerHTML=(d.recent||[]).map(function(gm){
+    var vs=gm.field>2?(gm.field+'-player game'):('def. '+esc(shortName(gm.losers[0]||'')));
+    return '<div class="recentItem"><span class="date">'+esc(gm.date)+'</span><span class="sport">'+esc(gm.sport)+'</span><span class="res"><b>'+esc(shortName(gm.winner))+'</b> won &middot; '+vs+(gm.chance!=null?' &middot; '+pctSmart(gm.chance)+' pre-game chance':'')+'</span>'+(gm.gain!=null?'<span class="delta">+'+Math.round(gm.gain)+'</span>':'')+'</div>';
+  }).join('');
+
+  /* weekly wrap */
+  var w=d.weekly;
+  if(w&&w.segments&&w.segments.length){
+    document.getElementById('showPanel').innerHTML=
+      '<div class="showMast"><h3>THE FWC WEEKLY</h3><div class="sub">'+esc(w.subtitle||'The Monday Wrap · with Macca and Robbo')+'</div>'+(w.hosts?'<div class="bios">'+esc(w.hosts)+'</div>':'')+'</div>'+
+      w.segments.map(function(seg){
+        return '<div class="seg"><h4>'+esc(seg.name)+'</h4>'+seg.lines.map(function(l){
+          return '<div class="line '+l.speaker.toLowerCase()+'"><span class="tag">'+esc(l.speaker)+'</span><p>'+esc(l.text)+'</p></div>';
+        }).join('')+'</div>';
+      }).join('');
+  } else {
+    document.getElementById('wrap').style.display='none';
+  }
+
+  var gen=new Date(d.generated);
+  document.getElementById('genLine').textContent='Family World Championship · data generated '+gen.toLocaleString('en-AU',{day:'numeric',month:'long',year:'numeric',hour:'numeric',minute:'2-digit'});
+}
+
+/* ---------- ladder with sorting ---------- */
+var ladderSort={key:'rank',asc:true};
+function renderLadder(d,key,asc){
+  ladderSort={key:key,asc:asc};
+  var cols=[
+    {k:'rank',t:'#'},{k:'player',t:'Athlete'},{k:'rating',t:'FWC Rating',num:1},{k:'games',t:'Games',num:1},
+    {k:'won',t:'W',num:1},{k:'lost',t:'L',num:1},{k:'winPct',t:'Win %',num:1},{k:'streak',t:'Streak'},
+    {k:'form5',t:'Form (last 5)'},{k:'move',t:'Move'},{k:'sports',t:'Sports',num:1},{k:'sos',t:'SoS',num:1},
+    {k:'behind',t:'Behind',num:1},{k:'lastPlayed',t:'Last Played'},{k:'status',t:'Status'},{k:'tier',t:'Tier'}
+  ];
+  var rows=(d.standings||[]).slice().sort(function(a,b){
+    var av=a[key],bv=b[key];
+    if(av==null)return 1; if(bv==null)return -1;
+    if(typeof av==='string'){av=av.toLowerCase();bv=String(bv).toLowerCase();return asc?(av<bv?-1:av>bv?1:0):(av>bv?-1:av<bv?1:0)}
+    return asc?av-bv:bv-av;
+  });
+  var thead='<thead><tr>'+cols.map(function(c){
+    var arr=ladderSort.key===c.k?(' <span class="arr">'+(ladderSort.asc?'&#9650;':'&#9660;')+'</span>'):'';
+    return '<th class="sortable'+(c.num?' num':'')+'" data-k="'+c.k+'">'+c.t+arr+'</th>';
+  }).join('')+'</tr></thead>';
+  var tbody='<tbody>'+rows.map(function(p){
+    var streakCls=p.streak.charAt(0)==='W'?'w':(p.streak.charAt(0)==='L'?'l':'n');
+    var formDots=(p.form5==='No games'||!p.form5)?'<span class="statusTag">no games</span>':'<span class="dots">'+p.form5.split('').map(function(ch){return ch==='W'?'<span class="dot-w"></span>':ch==='L'?'<span class="dot-l"></span>':''}).join('')+'</span>';
+    var mv=p.move.indexOf('▲')>=0?'<span class="mv up">'+esc(p.move)+'</span>':p.move.indexOf('▼')>=0?'<span class="mv dn">'+esc(p.move)+'</span>':'<span class="mv fl">–</span>';
+    var tierKey=(p.tier||'').split(' ')[0];
+    return '<tr>'+
+      '<td class="rk m'+p.rank+'">'+p.rank+'</td>'+
+      '<td class="pname">'+esc(p.player)+'</td>'+
+      '<td class="num rating">'+Math.round(p.rating)+'</td>'+
+      '<td class="num">'+p.games+'</td><td class="num" style="color:var(--win-bright)">'+p.won+'</td><td class="num" style="color:var(--loss-bright)">'+p.lost+'</td>'+
+      '<td class="num">'+pct(p.winPct)+'</td>'+
+      '<td><span class="pill '+streakCls+'">'+esc(p.streak||'·')+'</span></td>'+
+      '<td>'+formDots+'</td><td>'+mv+'</td>'+
+      '<td class="num">'+p.sports+'</td><td class="num">'+(p.sos!=null?Math.round(p.sos):'')+'</td>'+
+      '<td class="num">'+(p.behind==null?'·':p.behind===0?'leader':Math.round(p.behind))+'</td>'+
+      '<td class="statusTag">'+esc(p.lastPlayed||'·')+'</td>'+
+      '<td class="statusTag'+(p.status==='Provisional'?' prov':'')+'">'+esc(p.status)+'</td>'+
+      '<td><span class="tier '+tierKey+'">'+esc(p.tier)+'</span></td>'+
+    '</tr>';
+  }).join('')+'</tbody>';
+  var tbl=document.getElementById('ladderTbl');
+  tbl.innerHTML=thead+tbody;
+  tbl.querySelectorAll('th.sortable').forEach(function(th){
+    th.onclick=function(){
+      var k=th.getAttribute('data-k');
+      renderLadder(d,k,ladderSort.key===k?!ladderSort.asc:(k==='player'||k==='rank'));
+    };
+  });
+  document.getElementById('ladderNote').textContent='FWC Rating blends skill, form and arena points. SoS = strength of schedule (average opponent rating). Provisional athletes need more games and sports to qualify for the title.';
+}
+
+/* ---------- per-sport ladder ---------- */
+function renderSportLadder(d,si){
+  var sd=d.sportDetail;
+  var rows=sd.players.map(function(p,pi){
+    return {player:p,games:sd.played[si][pi]||0,wins:sd.wins[si][pi]||0,rating:sd.ratings?sd.ratings[si][pi]:null};
+  }).filter(function(r){return r.games>0}).sort(function(a,b){return (b.rating||0)-(a.rating||0)});
+  var champ=sd.topRated?sd.topRated[si]:'';
+  document.getElementById('sportTbl').innerHTML='<thead><tr><th>#</th><th>Athlete</th><th class="num">Sport Rating</th><th class="num">Games</th><th class="num">Wins</th><th class="num">Losses</th><th class="num">Win %</th></tr></thead><tbody>'+
+    rows.map(function(r,i){
+      return '<tr><td class="rk m'+(i+1)+'">'+(i+1)+'</td><td class="pname">'+esc(r.player)+(r.player===champ?' &nbsp;&#128081;':'')+'</td><td class="num rating">'+(r.rating!=null?Math.round(r.rating):'·')+'</td><td class="num">'+r.games+'</td><td class="num" style="color:var(--win-bright)">'+r.wins+'</td><td class="num" style="color:var(--loss-bright)">'+(r.games-r.wins)+'</td><td class="num">'+pct(r.games?r.wins/r.games:null)+'</td></tr>';
+    }).join('')+'</tbody>';
+}
+
+/* ---------- h2h ---------- */
+function renderH2H(d){
+  var h=d.h2h; if(!h){document.getElementById('h2h').style.display='none';return}
+  var keep=h.players.map(function(p,i){
+    var any=h.games[i]&&h.games[i].some(function(v){return v>0});
+    var anyCol=h.games.some(function(row){return row[i]>0});
+    return any||anyCol;
+  });
+  var html='<table class="h2h"><tr><th></th>'+h.players.map(function(p,i){return keep[i]?'<th class="colh"><span>'+esc(shortName(p))+'</span></th>':''}).join('')+'</tr>';
+  h.players.forEach(function(p,ri){
+    if(!keep[ri])return;
+    html+='<tr><th class="rowh">'+esc(shortName(p))+'</th>';
+    h.players.forEach(function(q,ci){
+      if(!keep[ci])return;
+      if(ri===ci){html+='<td class="self">·</td>';return}
+      var games=h.games[ri]?h.games[ri][ci]:0;
+      var cell=h.winPct[ri]?String(h.winPct[ri][ci]||''):'';
+      var m=cell.match(/^(\d+)%\s+of\s+(\d+)/);
+      if(!games||!m){html+='<td class="none"></td>';return}
+      var w=parseInt(m[1],10)/100;
+      var alpha=0.12+0.38*Math.abs(w-0.5)*2;
+      var bg=w>=0.5?'rgba(63,160,106,'+alpha.toFixed(2)+')':'rgba(192,80,77,'+alpha.toFixed(2)+')';
+      var col=w>=0.5?'var(--win-bright)':'var(--loss-bright)';
+      html+='<td style="background:'+bg+';color:'+col+'" title="'+esc(shortName(p))+' has won '+m[1]+'% of '+m[2]+' games against '+esc(shortName(q))+'">'+m[1]+'%<span class="sub">'+m[2]+' gm</span></td>';
+    });
+    html+='</tr>';
+  });
+  html+='</table>';
+  document.getElementById('h2hWrap').innerHTML=html;
+}
+
+/* ---------- live refresh ---------- */
+function setBadge(live,label){
+  var b=document.getElementById('liveBadge');
+  b.className=live?'':'snapshot';
+  document.getElementById('liveText').textContent=label;
+}
+function loadWorkbook(buf,sourceLabel){
+  try{
+    var wb=XLSX.read(buf,{cellDates:true});
+    var d=parseFWC(wb);
+    if(!d.standings||!d.standings.length)throw new Error('No standings found');
+    DATA=d;renderAll(d);
+    setBadge(true,sourceLabel);
+    toast('Dashboard refreshed · now showing live data');
+  }catch(e){toast('Could not read that file. Make sure it is the FWC Championship Tracker.');}
+}
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._h);t._h=setTimeout(function(){t.style.display='none'},4200);
+}
+function tryFetchLive(){
+  if(typeof XLSX==='undefined')return;
+  var i=0;
+  function next(){
+    if(i>=TRACKER_CANDIDATES.length)return;
+    var f=TRACKER_CANDIDATES[i++];
+    fetch(encodeURIComponent(f)).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()})
+      .then(function(buf){loadWorkbook(buf,'Live · reading tracker')})
+      .catch(next);
+  }
+  next();
+}
+document.getElementById('updBtn').onclick=function(){
+  if(typeof XLSX==='undefined'){toast('You appear to be offline. Connect to the internet once to enable live refresh.');return}
+  document.getElementById('filePick').click();
+};
+document.getElementById('filePick').onchange=function(e){
+  var f=e.target.files[0];if(!f)return;
+  f.arrayBuffer().then(function(buf){loadWorkbook(buf,'Live · from '+f.name.substring(0,24))});
+};
+['dragenter','dragover'].forEach(function(ev){document.addEventListener(ev,function(e){e.preventDefault();document.getElementById('dropOverlay').classList.add('on')})});
+['dragleave','drop'].forEach(function(ev){document.getElementById('dropOverlay').addEventListener(ev,function(e){e.preventDefault();if(ev==='dragleave'){document.getElementById('dropOverlay').classList.remove('on');return}
+  document.getElementById('dropOverlay').classList.remove('on');
+  var f=e.dataTransfer.files[0];
+  if(f&&typeof XLSX!=='undefined')f.arrayBuffer().then(function(buf){loadWorkbook(buf,'Live · from '+f.name.substring(0,24))});
+})});
+
+/* nav highlight */
+var secs=['stories','race','ladder','form','sports','h2h','records','honour','recent','wrap'];
+window.addEventListener('scroll',function(){
+  var y=window.scrollY+120,cur='';
+  secs.forEach(function(id){var el=document.getElementById(id);if(el&&el.offsetTop<=y&&el.style.display!=='none')cur=id});
+  document.querySelectorAll('#navLinks a').forEach(function(a){a.className=a.getAttribute('href')==='#'+cur?'on':''});
+},{passive:true});
+
+var genDate=new Date(DATA.generated);
+setBadge(false,'Snapshot · '+genDate.toLocaleDateString('en-AU',{day:'numeric',month:'short'}));
+renderAll(DATA);
+if(location.protocol.indexOf('http')===0)tryFetchLive();
+</script>
+</body>
+</html>
