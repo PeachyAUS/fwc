@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050f20">
+<title>FWC · Making the Matches Fair · A Proposal</title>
+<style>
+  :root{
+    --bg:#050f20; --panel:#0b1a33; --line:#1d3557;
+    --ink:#eaf1ff; --dim:#93a7c7; --gold:#e9b949; --green:#4ade80; --red:#f87171;
+    --blue:#60a5fa;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:28px 20px 80px}
+  .eyebrow{
+    letter-spacing:.18em; text-transform:uppercase; font-size:11px;
+    color:var(--gold); font-weight:700; margin-bottom:10px;
+  }
+  h1{font-size:34px; line-height:1.2; margin:0 0 14px; letter-spacing:-.02em}
+  h2{
+    font-size:24px; margin:52px 0 6px; letter-spacing:-.01em;
+    border-top:1px solid var(--line); padding-top:30px;
+  }
+  h3{font-size:18px; margin:30px 0 8px; color:var(--gold)}
+  p{margin:0 0 16px}
+  .lede{font-size:19px; color:#cddcf5}
+  .dim{color:var(--dim)}
+  .small{font-size:14px}
+  .card{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:14px; padding:20px 22px; margin:22px 0;
+  }
+  .card h3{margin-top:0}
+  .big{font-size:44px; font-weight:800; line-height:1.05; letter-spacing:-.02em}
+  .gold{color:var(--gold)} .green{color:var(--green)} .red{color:var(--red)} .blue{color:var(--blue)}
+  table{width:100%; border-collapse:collapse; margin:18px 0; font-size:15px}
+  th,td{padding:9px 10px; text-align:left; border-bottom:1px solid var(--line)}
+  th{color:var(--dim); font-weight:600; font-size:12px; letter-spacing:.08em; text-transform:uppercase}
+  td.num,th.num{text-align:right; font-variant-numeric:tabular-nums}
+  .chart{margin:20px 0 8px; width:100%; height:auto; display:block}
+  .cap{font-size:13px; color:var(--dim); margin:0 0 8px}
+  .vs{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:#08182f; border:1px solid var(--line); border-radius:12px;
+    padding:16px 18px; margin:14px 0;
+  }
+  .vs .who{font-weight:700; font-size:17px}
+  .vs .score{font-size:26px; font-weight:800; font-variant-numeric:tabular-nums}
+  .tag{
+    display:inline-block; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    padding:3px 9px; border-radius:999px; font-weight:700;
+  }
+  .tag.a{background:rgba(233,185,73,.16); color:var(--gold); border:1px solid rgba(233,185,73,.4)}
+  .tag.b{background:rgba(96,165,250,.16); color:var(--blue); border:1px solid rgba(96,165,250,.4)}
+  .tag.no{background:rgba(248,113,113,.14); color:var(--red); border:1px solid rgba(248,113,113,.35)}
+  .tag.yes{background:rgba(74,222,128,.14); color:var(--green); border:1px solid rgba(74,222,128,.35)}
+  ul{margin:0 0 16px; padding-left:22px} li{margin-bottom:9px}
+  .verdict{
+    border-left:3px solid var(--gold); padding:4px 0 4px 18px; margin:20px 0;
+    font-size:18px; color:#fff;
+  }
+  .foot{margin-top:60px; padding-top:22px; border-top:1px solid var(--line); font-size:13px; color:var(--dim)}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media(max-width:620px){ .grid2{grid-template-columns:1fr} h1{font-size:27px} .big{font-size:36px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Family World Championship · Proposal for a vote</div>
+  <h1>Making the matches fair</h1>
+  <p class="lede">Some of our match ups are not fair fights, and everybody knows it. This is a look at whether we can fix that, using our own 263 games as the evidence. There is a vote at the end. It should take about six minutes to read.</p>
+
+  <h2>1. The problem, in three real games</h2>
+
+  <p>These are not made up. They are from our own tracker.</p>
+
+  <div class="vs">
+    <div style="flex:1">
+      <div class="who">Oscar (12) v Shawn (40)</div>
+      <div class="dim small">Mario Kart, all time</div>
+    </div>
+    <div class="score gold">7 – 0</div>
+  </div>
+
+  <div class="vs">
+    <div style="flex:1">
+      <div class="who">Shawn (40) v Daniel the Ferret (30)</div>
+      <div class="dim small">Table Tennis, all time</div>
+    </div>
+    <div class="score gold">6 – 0</div>
+  </div>
+
+  <div class="vs">
+    <div style="flex:1">
+      <div class="who">David (67)</div>
+      <div class="dim small">Table Tennis, all time</div>
+    </div>
+    <div class="score red">1 win from 9</div>
+  </div>
+
+  <p>Three lopsided contests. When a game is that one sided, the loser stops wanting to play it and the winner gets nothing out of winning. That is what we are trying to solve.</p>
+
+  <h2>2. The idea we were asked to test</h2>
+
+  <p>The suggestion was age. We have a 12 year old and we have a 67 year old, so the thinking was that the tracker should even that out. Beat someone much older and you get a bonus. Lose to someone much older and it costs you less.</p>
+
+  <p>Our middle age is <strong>37</strong>. Six of us are younger than that, four are older, and three of us are exactly 37. So we tested whether being a long way from 37, in either direction, actually costs you games.</p>
+
+  <h3>In running around sports, it does</h3>
+  <p class="cap">Win rate in physical sports (basketball, table tennis, air hockey, arcade games), by age</p>
+
+  <svg class="chart" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bar chart of win rate in physical sports by age, peaking at age 40">
+    <line x1="50" y1="260" x2="780" y2="260" stroke="#1d3557" stroke-width="2"/>
+    <g font-size="13" fill="#93a7c7" text-anchor="middle">
+      <rect x="60"  y="164" width="70" height="96"  fill="#f87171" rx="3"/>
+      <rect x="150" y="197" width="70" height="63"  fill="#f87171" rx="3"/>
+      <rect x="240" y="110" width="70" height="150" fill="#60a5fa" rx="3"/>
+      <rect x="330" y="62"  width="70" height="198" fill="#4ade80" rx="3"/>
+      <rect x="420" y="41"  width="70" height="219" fill="#4ade80" rx="3"/>
+      <rect x="510" y="68"  width="70" height="192" fill="#4ade80" rx="3"/>
+      <rect x="600" y="110" width="70" height="150" fill="#60a5fa" rx="3"/>
+      <rect x="690" y="227" width="70" height="33"  fill="#f87171" rx="3"/>
+
+      <g font-size="15" font-weight="700" fill="#eaf1ff">
+        <text x="95"  y="155">32%</text><text x="185" y="188">21%</text>
+        <text x="275" y="101">50%</text><text x="365" y="53">66%</text>
+        <text x="455" y="32">73%</text><text x="545" y="59">64%</text>
+        <text x="635" y="101">50%</text><text x="725" y="218">11%</text>
+      </g>
+      <text x="95"  y="280">Oscar</text><text x="185" y="280">Ferret</text>
+      <text x="275" y="280">Aaron</text><text x="365" y="280">Josh</text>
+      <text x="455" y="280">Shawn</text><text x="545" y="280">Dean B</text>
+      <text x="635" y="280">Simon</text><text x="725" y="280">David</text>
+      <g font-size="12" fill="#6f86a8">
+        <text x="95"  y="296">12</text><text x="185" y="296">30</text>
+        <text x="275" y="296">34</text><text x="365" y="296">37</text>
+        <text x="455" y="296">40</text><text x="545" y="296">58</text>
+        <text x="635" y="296">66</text><text x="725" y="296">67</text>
+      </g>
+    </g>
+  </svg>
+
+  <p>That is the shape people expected. It climbs to a peak around 37 to 40 and falls away at both ends. Oscar at the young end and David at the old end are both well below everyone else. So far the age idea looks right.</p>
+
+  <h3>In the standing still sports, it flips completely</h3>
+  <p class="cap">Win rate in precision sports (darts, pool, snooker, golf, putt putt, shuffleboard), by age</p>
+
+  <svg class="chart" viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bar chart of win rate in precision sports by age, rising with age">
+    <line x1="50" y1="260" x2="780" y2="260" stroke="#1d3557" stroke-width="2"/>
+    <g font-size="13" fill="#93a7c7" text-anchor="middle">
+      <rect x="60"  y="155" width="70" height="105" fill="#60a5fa" rx="3"/>
+      <rect x="150" y="146" width="70" height="114" fill="#60a5fa" rx="3"/>
+      <rect x="240" y="140" width="70" height="120" fill="#60a5fa" rx="3"/>
+      <rect x="330" y="146" width="70" height="114" fill="#60a5fa" rx="3"/>
+      <rect x="420" y="128" width="70" height="132" fill="#60a5fa" rx="3"/>
+      <rect x="510" y="80"  width="70" height="180" fill="#4ade80" rx="3"/>
+      <rect x="600" y="83"  width="70" height="177" fill="#4ade80" rx="3"/>
+      <rect x="690" y="173" width="70" height="87"  fill="#f87171" rx="3"/>
+
+      <g font-size="15" font-weight="700" fill="#eaf1ff">
+        <text x="95"  y="146">35%</text><text x="185" y="137">38%</text>
+        <text x="275" y="131">40%</text><text x="365" y="137">38%</text>
+        <text x="455" y="119">44%</text><text x="545" y="71">60%</text>
+        <text x="635" y="74">59%</text><text x="725" y="164">29%</text>
+      </g>
+      <text x="95"  y="280">Oscar</text><text x="185" y="280">Ferret</text>
+      <text x="275" y="280">Aaron</text><text x="365" y="280">Josh</text>
+      <text x="455" y="280">Shawn</text><text x="545" y="280">Dean B</text>
+      <text x="635" y="280">Simon</text><text x="725" y="280">David</text>
+      <g font-size="12" fill="#6f86a8">
+        <text x="95"  y="296">12</text><text x="185" y="296">30</text>
+        <text x="275" y="296">34</text><text x="365" y="296">37</text>
+        <text x="455" y="296">40</text><text x="545" y="296">58</text>
+        <text x="635" y="296">66</text><text x="725" y="296">67</text>
+      </g>
+    </g>
+  </svg>
+
+  <p><strong>Dean B at 58 and Simon at 66 are the two best precision players in the family.</strong> If we handed out points for being old, we would be paying them for a disadvantage they do not have, in the sports they are best at.</p>
+
+  <h2>3. Then the number that settles it</h2>
+
+  <div class="card">
+    <div class="dim small" style="letter-spacing:.1em; text-transform:uppercase">Head to head, every sport, all time</div>
+    <div class="big"><span class="gold">Oscar 11</span> <span class="dim">–</span> <span>7 Shawn</span></div>
+    <p style="margin:12px 0 0" class="dim">The 12 year old is beating the 40 year old across the board, not just at Mario Kart.</p>
+  </div>
+
+  <p>An age system would have looked at Oscar and Shawn, seen a 28 year gap, and handed Oscar the help. Oscar does not need the help. He is winning.</p>
+
+  <p>It goes further. Oscar's Mario Kart rating is <strong class="green">1063</strong>. Shawn's is <strong class="red">845</strong>. Oscar is the best Mario Kart player in the family and Shawn is the worst, by a long way. Age would have got that exactly backwards.</p>
+
+  <p>And the same kid, on the same console, has a Mario Golf record of <strong>2 wins from 11</strong>. His age did not change between games. What changed was the sport.</p>
+
+  <div class="verdict">Age tells you what somebody <em>might</em> be able to do. It does not tell you what they actually do. Our own results say the guess is wrong about as often as it is right.</div>
+
+  <h3>Two more checks, both against the age idea</h3>
+  <table>
+    <tr><th>Athlete</th><th class="num">Age</th><th class="num">Win rate</th><th class="num">Ladder</th></tr>
+    <tr><td>Dean B</td><td class="num">58</td><td class="num green">62%</td><td class="num">3rd</td></tr>
+    <tr><td>Cody</td><td class="num">30</td><td class="num red">13%</td><td class="num">14th</td></tr>
+  </table>
+  <p>Our oldest bloke bar two has the best win rate in the competition. One of our youngest has the worst. An age handicap would have taken points off Dean B and given nothing at all to Cody, who is the one actually struggling.</p>
+
+  <h2>4. So what would actually work</h2>
+
+  <p>The tracker already keeps a separate rating for every athlete in every sport. Not a guess, a record of how you have really gone. Shawn's Table Tennis rating is 1119. Ferret's is 901. That gap is why the record is 6 nil.</p>
+
+  <p>The fix is the one golf has used for a hundred years. <strong>A head start, sized by the gap.</strong></p>
+
+  <div class="card">
+    <h3>How it would work</h3>
+    <p>Every 80 points of gap in a sport is worth roughly a one point head start in that sport. Nothing else changes. You still play the game, you just do not start level when you were never level to begin with.</p>
+    <table>
+      <tr><th>Match up</th><th class="num">Rating gap</th><th>Head start</th></tr>
+      <tr><td>Shawn v Ferret · Table Tennis</td><td class="num">218</td><td>Ferret starts <strong class="gold">3 up</strong></td></tr>
+      <tr><td>Oscar v Shawn · Mario Kart</td><td class="num">218</td><td>Shawn starts <strong class="gold">3 up</strong></td></tr>
+      <tr><td>Dean B v Cody · Pool</td><td class="num">92</td><td>Cody starts <strong class="gold">1 up</strong></td></tr>
+      <tr><td>Aaron v Ferret · Darts</td><td class="num">39</td><td class="dim">no start, close enough</td></tr>
+    </table>
+    <p class="small dim" style="margin-bottom:0">Notice the second row. The handicap makes the 40 year old the one who gets help against the 12 year old, because in that sport he is the one getting beaten. Age could never have worked that out.</p>
+  </div>
+
+  <h3>The one rule that has to come with it</h3>
+  <p>Golf keeps two scores, and we would too.</p>
+  <ul>
+    <li><strong>The head start decides the night.</strong> Who wins the game in the room, who gets the bragging rights.</li>
+    <li><strong>The raw result still feeds your rating.</strong> Who actually put the ball in the hole.</li>
+  </ul>
+  <p>Without that split, everyone drifts towards winning half their games, all the ratings squash together, and the ladder stops meaning anything. With it, the games get close and the ladder stays honest.</p>
+
+  <h2>5. Case studies</h2>
+
+  <div class="card">
+    <h3>Case 1 · Ferret and the table tennis wall</h3>
+    <p>Six matches against Shawn, six losses. Ferret has played 124 games all up, more than anyone except Shawn, and his table tennis rating of 901 is the lowest of the ten of us who play it.</p>
+    <p><strong>With a handicap:</strong> Ferret starts 3 points up. On his six losses so far, that gap would have made at least a couple of them live contests into the back end. He does not get given a win. He gets given a chance.</p>
+    <p class="small dim" style="margin-bottom:0"><span class="tag yes">Fixes it</span> Age would also have flagged this one, but backwards. Ferret is 30 and Shawn is 40, so an age system would have given the head start to the wrong man.</p>
+  </div>
+
+  <div class="card">
+    <h3>Case 2 · Shawn and the Mario Kart problem</h3>
+    <p>Seven races against Oscar, seven losses. Shawn's Mario Kart rating is 845, which is the lowest rating any of us holds in any sport we play regularly.</p>
+    <p><strong>With a handicap:</strong> Shawn starts 3 places up, or Oscar gives him a lap start, whatever suits the game. Suddenly there is a race on.</p>
+    <p class="small dim" style="margin-bottom:0"><span class="tag no">Age gets this wrong</span> An age system would have handed the 12 year old a bonus for beating a 40 year old, in the one sport where the 12 year old is the best in the family.</p>
+  </div>
+
+  <div class="card">
+    <h3>Case 3 · David, and why one number hides two stories</h3>
+    <p>David's overall win rate is 22%, the second lowest in the competition, and it would be easy to put that down to being 67. But split it by sport and it is not one story at all.</p>
+    <table>
+      <tr><th>Sport</th><th class="num">Record</th><th class="num">Win rate</th></tr>
+      <tr><td>Table Tennis</td><td class="num">1 from 9</td><td class="num red">11%</td></tr>
+      <tr><td>ShuffleBoard</td><td class="num">3 from 7</td><td class="num green">43%</td></tr>
+      <tr><td>Darts</td><td class="num">1 from 3</td><td class="num">33%</td></tr>
+    </table>
+    <p><strong>With a handicap:</strong> David gets a decent head start at table tennis where he needs it, and close to nothing at shuffleboard where he is holding his own. An age system would have given him the same bonus in both, which would have handed him free points at the shuffleboard table.</p>
+    <p class="small dim" style="margin-bottom:0"><span class="tag yes">Fixes it, precisely</span></p>
+  </div>
+
+  <div class="card">
+    <h3>Case 4 · Dean B, the one an age system would punish</h3>
+    <p>58 years old. Third on the ladder. The best win rate in the family at 62%. Unbeaten in four at the car racing arcade, 70% at shuffleboard, 71% at table tennis.</p>
+    <p><strong>With a handicap:</strong> he gives head starts, because he has earned that by winning. That is the system working.</p>
+    <p><strong>With an age system:</strong> he collects a bonus for being 58, on top of a record that says he does not need one.</p>
+    <p class="small dim" style="margin-bottom:0"><span class="tag no">Age gets this wrong</span></p>
+  </div>
+
+  <h2>6. What it would cost us to run</h2>
+
+  <p>Being straight about the limits. A handicap is only as good as the games behind it, and some of our sports have barely been played.</p>
+
+  <table>
+    <tr><th>Ready now, enough games</th><th>Not yet, too thin</th></tr>
+    <tr>
+      <td>Table Tennis · ShuffleBoard · Mario Golf · FIFA · Darts · Mario Kart · Mario Party</td>
+      <td>HORSE · Chess · Poker · Putt Putt · Golf · Air Hockey · Pool · Cards · Call of Duty · the arcade games</td>
+    </tr>
+  </table>
+
+  <p><strong>Seven of our twenty played sports could carry a handicap today.</strong> The rest need more games first. Air Hockey has been played six times total, so there is nothing there to work from yet.</p>
+
+  <p>And in most sports the gaps are small enough that the handicap would be nothing at all. Darts runs from Aaron at 1046 down to Shawn at 982, a gap of 64 across nine players, so almost nobody would get a start. Only Table Tennis and Mario Kart are wide enough right now to really change a game.</p>
+
+  <div class="verdict">This is why the proposal is for <strong>next season, starting January</strong>. By then we will have another few hundred games in the book and most of the thin sports fill in on their own.</div>
+
+  <h2>7. What we recommend</h2>
+
+  <p><strong>Skip the age curve. Bring in sport handicaps in January.</strong></p>
+
+  <p>The age idea was worth testing and it was right about one thing: some of our match ups are not fair. But when we checked it against 263 real games it got Oscar wrong, it got Shawn wrong, it got Dean B wrong and it got David half wrong. It is a guess about ability, and we already have the real thing sitting in the tracker.</p>
+
+  <p>Handicaps use what actually happened. They point the help at whoever is losing, in the sport they are losing at, no matter how old they are. They shrink by themselves as you improve, and disappear when you no longer need them. And nobody has to talk about anybody's birthday.</p>
+
+  <h2>8. What you are voting on</h2>
+
+  <div class="card">
+    <table>
+      <tr><th style="width:34px"></th><th>Question</th></tr>
+      <tr><td class="gold"><strong>1</strong></td><td><strong>Bring in sport handicaps from January?</strong> Head start sized by the rating gap, in sports with enough games behind them.</td></tr>
+      <tr><td class="gold"><strong>2</strong></td><td><strong>Handicap decides the night, raw result feeds the rating?</strong> The golf way. Recommended, and the system does not work properly without it.</td></tr>
+      <tr><td class="gold"><strong>3</strong></td><td><strong>One point of head start per 80 rating points?</strong> This is the dial. Lower means bigger head starts, higher means smaller. It can be changed by a vote any time.</td></tr>
+      <tr><td class="gold"><strong>4</strong></td><td><strong>Do we want the age curve as well, or is it dead?</strong> Recommendation is dead, on the evidence above.</td></tr>
+    </table>
+    <p class="small dim" style="margin-bottom:0">Same rules as any sport vote: at least 7 of us have to vote, and 8 have to be in favour for it to pass. Worth knowing that with Dylan S not playing until the new year, that is 8 out of the 13 of us actually voting.</p>
+  </div>
+
+  <div class="foot">
+    <p>Every number in this document comes from FWC_Championship_Tracker_8.xlsx as at game 263, played 22 August 2026. Ages are as at 2026. Thirteen athletes included; Dylan S has not played a game and is out until the new year.</p>
+    <p style="margin-bottom:0">Physical sports means basketball, HORSE, table tennis, sting pong, air hockey, go karting and the arcade games. Precision sports means darts, pool, kelly pool, snooker, golf, putt putt, shuffleboard and target. Prepared for the Family World Championship, August 2026.</p>
+  </div>
+
+</div>
+</body>
+</html>
