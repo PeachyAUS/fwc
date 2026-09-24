@@ -137,6 +137,10 @@ tfoot td,.tblNote{font-size:12.5px;color:var(--faint);padding:10px 14px}
 #ladderTbl td{padding:9px 8px;font-size:13.5px}
 #ladderTbl .rating{font-size:16px}
 .provMark{font-family:var(--cond);font-size:10.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#d0a952;border:1px solid rgba(208,169,82,.4);border-radius:8px;padding:0 6px;vertical-align:1px}
+.riskMark.warn{color:#f0b95a;border-color:rgba(240,185,90,.5)}
+.riskMark.out{color:#fff;background:rgba(192,80,77,.55);border-color:rgba(224,113,109,.8)}
+.statusKey{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:0 2px 10px;font-size:13px;color:var(--muted)}
+.statusKey .riskMark{margin-right:6px}
 .riskMark{font-family:var(--cond);font-size:10.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--loss-bright);border:1px solid rgba(192,80,77,.45);border-radius:8px;padding:0 6px;vertical-align:1px}
 
 /* ---------- matchup predictor ---------- */
@@ -585,6 +589,7 @@ footer .formula{color:var(--muted);margin-bottom:10px}
 
 <section id="ladder">
   <div class="sechead"><h2>Live Standings</h2><p>ranked by FWC Rating &middot; tap a column heading to re-sort</p></div>
+  <div class="statusKey" id="statusKey"><span><span class="riskMark warn">&#9888; at risk</span>two weeks without a game &middot; a warning only, still holds or can win the crown</span><span><span class="riskMark out">&#9940; inactive</span>four weeks without a game &middot; loses 10 points a week and cannot hold the crown</span><span>&#128081; the champion: highest-rated athlete who is not inactive</span></div>
   <div class="panel tblScroll"><table id="ladderTbl"></table></div>
   <p class="tblNote" id="ladderNote"></p>
 </section>
@@ -1771,10 +1776,13 @@ function renderLadder(d,key,asc){
     var mv=p.move.indexOf('▲')>=0?'<span class="mv up">'+esc(p.move)+'</span>':p.move.indexOf('▼')>=0?'<span class="mv dn">'+esc(p.move)+'</span>':'<span class="mv fl">–</span>';
     var tierKey=(p.tier||'').split(' ')[0];
     var tip=esc(p.player)+' · '+p.status+(p.activity?' · '+p.activity:'')+(p.lastPlayed?' · last played '+p.lastPlayed:'')+(p.wksIdle!=null?' · '+p.wksIdle+' wks idle':'');
-    var risky=/risk|inactive/i.test(p.activity||'');
+    var champRank=(function(){var c=d.standings.filter(function(x){return x.player===d.champion})[0];return c?c.rank:99})();
+    var riskHtml='';
+    if(p.activity==='Inactive'){riskHtml=' <span class="riskMark out" title="Inactive: four weeks or more without a game. Loses 10 points a week and cannot hold the crown until the next game.">&#9940; inactive'+(p.rank<champRank?' &middot; no crown':'')+'</span>';}
+    else if(p.activity==='At risk'){var ck=idleClock(p.lastPlayedISO);var dl=ck&&ck.first?ck.days:null;riskHtml=' <span class="riskMark warn" title="At risk: two weeks without a game. A warning only. At four weeks the 10 point penalty starts and the crown is lost.">&#9888; at risk'+(dl!=null?' &middot; '+dl+(dl===1?' day':' days'):'')+'</span>';}
     return '<tr title="'+tip+'">'+
       '<td class="rk m'+p.rank+'">'+p.rank+'</td>'+
-      '<td class="pname">'+plink(p.player,p.player)+(d.champion&&p.player===d.champion?' &#128081;':'')+(p.status==='Provisional'?' <span class="provMark">prov</span>':'')+(risky?' <span class="riskMark" title="'+esc(p.activity)+'">&#9888; idle</span>':'')+'</td>'+
+      '<td class="pname">'+plink(p.player,p.player)+(d.champion&&p.player===d.champion?' &#128081;':'')+(p.status==='Provisional'?' <span class="provMark">prov</span>':'')+riskHtml+'</td>'+
       '<td class="num rating">'+Math.round(p.rating)+'</td>'+
       '<td class="num"><span style="color:var(--win-bright)">'+p.won+'</span>&#8211;<span style="color:var(--loss-bright)">'+p.lost+'</span> <span style="color:var(--faint)">('+p.games+')</span></td>'+
       '<td class="num">'+pct(p.winPct)+'</td>'+
@@ -1793,7 +1801,7 @@ function renderLadder(d,key,asc){
       renderLadder(d,k,ladderSort.key===k?!ladderSort.asc:(k==='player'||k==='rank'));
     };
   });
-  document.getElementById('ladderNote').textContent='Record shows wins–losses (games played). FWC Rating is the ladder number: skill, form and arena points from games, plus poker stakes, less any idle penalty. SoS = strength of schedule (average opponent rating). Tap a name for the full profile: last played, days idle and how the rating is made up. The crown \ud83d\udc51 sits with the highest-rated athlete who is eligible and has played in the last four weeks. Provisional athletes need more games and sports to qualify for the title.';
+  document.getElementById('ladderNote').textContent='Record shows wins–losses (games played). FWC Rating is the ladder number: skill, form and arena points from games, plus poker stakes, less any idle penalty. SoS = strength of schedule (average opponent rating). Tap a name for the full profile: last played, days idle and how the rating is made up. The crown \ud83d\udc51 sits with the highest-rated athlete who is eligible and has played in the last four weeks. An at risk tag counts down the days until the four week mark, when the penalty starts and the crown is lost. Provisional athletes need more games and sports to qualify for the title.';
 }
 
 /* ---------- matchup predictor ----------
