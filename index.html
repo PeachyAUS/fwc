@@ -1779,7 +1779,7 @@ function renderLadder(d,key,asc){
     var champRank=(function(){var c=d.standings.filter(function(x){return x.player===d.champion})[0];return c?c.rank:99})();
     var riskHtml='';
     if(p.activity==='Inactive'){riskHtml=' <span class="riskMark out" title="Inactive: four weeks or more without a game. Loses 10 points a week and cannot hold the crown until the next game.">&#9940; inactive'+(p.rank<champRank?' &middot; no crown':'')+'</span>';}
-    else if(p.activity==='At risk'){var ck=idleClock(p.lastPlayedISO);var dl=ck&&ck.first?ck.days:null;riskHtml=' <span class="riskMark warn" title="At risk: two weeks without a game. A warning only. At four weeks the 10 point penalty starts and the crown is lost.">&#9888; at risk'+(dl!=null?' &middot; '+dl+(dl===1?' day':' days'):'')+'</span>';}
+    else if(p.activity==='At risk'){var ck=idleClock(p.lastPlayedISO);var dl=ck&&ck.first?ck.days:null;riskHtml=' <span class="riskMark warn" title="At risk: two weeks without a game. A warning only. At four weeks the 10 point penalty starts and the crown is lost.">&#9888; at risk'+(dl!=null?' &middot; inactive '+(dl<=0?'today':dl===1?'tomorrow':'in '+dl+' days'):'')+'</span>';}
     return '<tr title="'+tip+'">'+
       '<td class="rk m'+p.rank+'">'+p.rank+'</td>'+
       '<td class="pname">'+plink(p.player,p.player)+(d.champion&&p.player===d.champion?' &#128081;':'')+(p.status==='Provisional'?' <span class="provMark">prov</span>':'')+riskHtml+'</td>'+
@@ -1801,7 +1801,7 @@ function renderLadder(d,key,asc){
       renderLadder(d,k,ladderSort.key===k?!ladderSort.asc:(k==='player'||k==='rank'));
     };
   });
-  document.getElementById('ladderNote').textContent='Record shows wins–losses (games played). FWC Rating is the ladder number: skill, form and arena points from games, plus poker stakes, less any idle penalty. SoS = strength of schedule (average opponent rating). Tap a name for the full profile: last played, days idle and how the rating is made up. The crown \ud83d\udc51 sits with the highest-rated athlete who is eligible and has played in the last four weeks. An at risk tag counts down the days until the four week mark, when the penalty starts and the crown is lost. Provisional athletes need more games and sports to qualify for the title.';
+  document.getElementById('ladderNote').textContent='Record shows wins–losses (games played). FWC Rating is the ladder number: skill, form and arena points from games, plus poker stakes, less any idle penalty. SoS = strength of schedule (average opponent rating). Tap a name for the full profile: last played, days idle and how the rating is made up. The crown \ud83d\udc51 sits with the highest-rated athlete who is eligible and has played in the last four weeks. An at risk tag shows how many days are left before that athlete becomes inactive, when the penalty starts and the crown is lost. Provisional athletes need more games and sports to qualify for the title.';
 }
 
 /* ---------- matchup predictor ----------
